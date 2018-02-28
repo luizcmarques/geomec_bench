@@ -25,6 +25,9 @@ ENDIF (WIN32)
 
 include_directories(${PZ_INCLUDE_DIRS})
 
+# this is the top level directory of your build tree 
+MESSAGE( STATUS "CMAKE_BINARY_DIR:         " ${PZ_INCLUDE_DIRS} )
+
 IF(APPLE)
    # Mac OS X specific code
    add_definitions(-DMACOSX)

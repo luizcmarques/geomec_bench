@@ -1,8 +1,8 @@
 file(GLOB headers *.h)
 file(GLOB sources *.cpp)
 
-set(Benchmark0a main.cpp ${headers})
+set(Mymain main.cpp ${sources} ${headers})
 
-add_executable(Benchmark0a ${Benchmark0a})
+add_executable(Benchmark0a ${Mymain})
 
 target_link_libraries(Benchmark0a pz)
