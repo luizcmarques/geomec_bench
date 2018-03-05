@@ -1,0 +1,195 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{siunitx}
+\usepackage{float}
+
+\large
+\title{Phase I}
+\begin{document}
+\begin{titlepage}
+	\begin{center}
+    \line(1,0){300}\\
+    [0.65cm]
+	\huge{\bfseries Strong formulation}\\
+	\line(1,0){300}\\
+	\textsc{\Large Geomech network: Benchmark 0a}\\
+	\textsc{\LARGE \today}\\
+	[5.5cm]     
+	\end{center}
+	\begin{flushright}
+		\textsc{\Large LabMeC staff: TQ, OD, PC, PD}\\
+		[0.5cm]
+	\end{flushright}
+\end{titlepage}
+
+\section{Mass conservation}
+
+We consider for both porous media and fractures the following assumptions:
+
+\begin{itemize}
+\item Steady state
+\item Darcy flow 2D on porous media.
+\item Darcy flow 1D on fractures.
+\item Water as incompressible fluid.
+\item No gravity.
+\item Incompressible solid/rock.
+\item Among others ...
+\end{itemize}
+
+
+The mass balance equation for 2D porous media is:
+
+\begin{equation}
+div\left(\rho\mathbf{v}\right)=0
+\end{equation}
+
+The Darcy's velocity for the porous media is:
+
+\begin{equation}
+\mathbf{v}=-\frac{1}{\mu}\mathbf{K}\nabla\left(p\right)
+\end{equation}
+
+The tensor $\mathbf{K}$ represents the absolute permeability $\si{\square\metre}$.
+\begin{equation}
+\mathbf{K}=\left[\begin{array}{cc}
+k_{h} & 0\\
+0 & k_{v}
+\end{array}\right]
+\end{equation}
+
+The scalars $p$, $\rho$ and $\mu$ are fluid pressure $\si{\pascal}$, fluid density $\si{\kilo\gram\per\cubic\metre}$ and fluid viscosity $\si{\pascal\second}$ respectively.
+
+The mass balance equation for 1D fracture is:
+
+\begin{equation}
+div\left(\rho v_{f}\right)+q_{f}=0
+\end{equation}
+
+The Darcy's velocity for fracture media is:
+
+\begin{equation}
+v_{x}=-\frac{1}{\mu}k_{h}\left(p\right)
+\end{equation}
+
+The scalar $k_{f}$ and $q_{f}$ represents the absolute permeability for the fracture in $\si{\square\metre}$ and cross section source term $\si{\kilo\gram\per\cubic\metre\second}$.
+
+\section{Expected output}
+
+\subsection*{Equivalent or average horizontal permeability}
+
+
+Considering a layered reservoir, the cross section horizontal flow
+rate form each layer can be calculated as:
+
+Layer 1:
+
+\begin{equation}
+q_{x}=v_{x}A_{1}=-\frac{A_{1}}{\mu}k_{h}\frac{\left(p_{out}-p_{in}\right)}{\Delta x}
+\end{equation}
+
+Layer 2:
+
+\begin{equation}
+q_{f}=v_{f}A_{2}=-\frac{A_{2}}{\mu}k_{f}\frac{\left(p_{out}-p_{in}\right)}{\Delta x}
+\end{equation}
+
+The total flow rate is 
+
+\begin{equation}
+q_{tx}=v_{tx}A=-\frac{A}{\mu}k_{avgh}\frac{\left(p_{out}-p_{in}\right)}{\Delta x}
+\end{equation}
+
+or
+
+\begin{equation}
+q_{tx}=q_{x}+q_{f}=-\frac{A}{\mu}k_{avgh}\frac{\left(p_{out}-p_{in}\right)}{\Delta x}
+\end{equation}
+
+Leading to 
+
+\begin{equation}
+k_{avgh}=\frac{2 k_{h}A_{1}+k_{f}A_{2}}{2 A_{1}+A_{2}}
+\end{equation}
+
+\subsection*{Equivalent or average horizontal permeability}
+
+The vertical average permeability $k_v$ remains unaltered.
+
+\subsection*{Equivalent or average porosity}
+
+The average porosity $\phi$ is updated as:
+
+\begin{equation}
+\phi_{avgh}=\frac{V_{p}+V_{f}}{V_{t}+V_{f}}
+\end{equation}
+
+\section*{Appendix neopz code:  Benchmark 0a}
+
+\section{Expected output with provided data}
+
+\begin{table}[H]
+\begin{centering}
+\begin{tabular}{|c|c|c|}
+\hline 
+Quantity & Given units & si units\tabularnewline
+\hline 
+\hline 
+$k_{h}$ & 343.29 $mD$ & 3.38801e-13 $\si{\square\metre}$ \tabularnewline
+\hline 
+$k_{v}$ & 0.026 $mD$ & 2.56600e-17 $\si{\square\metre}$ \tabularnewline
+\hline 
+$k_{f}$ & 475000 $mD$ & 4.68789e-10 $\si{\square\metre}$ \tabularnewline
+\hline 
+$\phi$ & $0.0758$ & $0.0758$\tabularnewline
+\hline 
+$\Delta x$ & 200 $\si{\metre}$  & 200 $\si{\metre}$ \tabularnewline
+\hline 
+$\Delta y$ & 5 $\si{\metre}$  & 5 $\si{\metre}$ \tabularnewline
+\hline 
+$\Delta y_{f}$ & 6.5e-5 $\si{\metre}$  & 6.5e-5 $\si{\metre}$ \tabularnewline
+\hline 
+\end{tabular}
+\par\end{centering}
+\caption{Benchmark 0a data.}
+
+\end{table}
+\begin{table}[H]
+\begin{centering}
+\begin{tabular}{|c|c|c|}
+\hline 
+Quantity & Given units & si units\tabularnewline
+\hline 
+\hline 
+$k_{avgh}$ & 346.375 $mD$ & 3.41845e-13 $\si{\square\metre}$ \tabularnewline
+\hline 
+$k_{avgv}$ & 0.026 $mD$ & 2.56600e-17 $\si{\square\metre}$ \tabularnewline
+\hline 
+$\phi_{avg}$ & $0.075806007$ & $0.075806007$\tabularnewline
+\hline 
+\end{tabular}
+\par\end{centering}
+\caption{Benchmark 0a results.}
+\end{table}
+
+\section{Discussion}
+
+The expected output is completely determined by geometrical arguments.
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
