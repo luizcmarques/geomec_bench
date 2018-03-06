@@ -14,8 +14,8 @@ L = 200;
 Lf = 200;
 
 n_bc = 2;
-ny = 8;
-nx = 2;
+nx = 9;
+ny = 3;
 pr = 1;
 
 // Coordenadas dos pontos
@@ -42,9 +42,9 @@ pr = 1;
   //Fratura
   Line(5) = {5, 6};
 
-  Transfinite Line{1,3} = ny Using Progression pr;
-  Transfinite Line{2,4} = nx Using Progression pr;
-  Transfinite Line{5} = ny Using Progression pr;
+  Transfinite Line{1,3} = nx Using Progression pr;
+  Transfinite Line{2,4} = ny Using Progression pr;
+  Transfinite Line{5} = nx Using Progression pr;
 
 
 // Definição da superfície 
@@ -52,6 +52,8 @@ pr = 1;
   Line Loop(5) = {1, 2, 3, 4};
  
   Plane Surface(6) = {5};
+
+  Transfinite Surface {6} = {1,2,3,4};
 
   If(IsquadQ)
 
@@ -71,7 +73,7 @@ pr = 1;
   Physical Line("top") = {3};
   Physical Line("right") = {2};
   Physical Line("left") = {4};
-  Physical Line("frac") = {7};
+  Physical Line("frac") = {5};
   
   //Physical Line("holes") = {holes[]};  
   //Physical Surface("interface") = {23};

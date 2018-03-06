@@ -84,9 +84,9 @@ TPZCompEl *CreateInterfaceEl(TPZGeoEl *gel,TPZCompMesh &mesh,int64_t &index);
 
 const int dim = 2; //Dimensão do problema
 const int matID = 1; //Materia do elemento volumétrico
-const int matBCbott = 2, matBCtop = 3, matBCright = 4, matBCleft = 5, matBCholes = 6; //Materiais das condições de contorno
+const int matBCbott = 2, matBCtop = 3, matBCright = 4, matBCleft = 5, matFrac = 6; //Materiais das condições de contorno
 const int matInterface = 17; //Material do elemento de interface
-const int matIntBCbott = matBCbott+10, matIntBCtop=matBCtop+10,  matIntBCright=matBCright+10, matIntBCleft=matBCleft+10, matIntBCholes=matBCholes+10; //Materiais das condições de contorno (elementos de interface)
+const int matIntBCbott = matBCbott+10, matIntBCtop=matBCtop+10,  matIntBCright=matBCright+10, matIntBCleft=matBCleft+10, matIntBCholes=matFrac+10; //Materiais das condições de contorno (elementos de interface)
 //const int matPoint =-5;//Materia de um ponto
 int dirichlet = 0, neumann = 1, penetration = 2, pointtype=5, dirichletPress=6; //Condições de contorno do problema ->default Dirichlet na esquerda e na direita
 const REAL visco=1., perm=1., theta=-1.; //Coeficientes: viscosidade, fator simetria
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
     AddMultiphysicsInterfaces(*cmesh_m,matIntBCtop,matBCtop);
     AddMultiphysicsInterfaces(*cmesh_m,matIntBCright,matBCright);
     AddMultiphysicsInterfaces(*cmesh_m,matIntBCleft,matBCleft);
-    AddMultiphysicsInterfaces(*cmesh_m,matIntBCholes,matBCholes);
+    AddMultiphysicsInterfaces(*cmesh_m,matIntBCholes,matFrac);
     
 #endif
     
@@ -341,10 +341,8 @@ TPZGeoMesh *CreateGMesh()
         }
     }
     
-    
     TPZCheckGeom check(gmesh);
     check.CheckUniqueId();
-    
     
     int n_div = 0;
     UniformRefine(gmesh,n_div);
@@ -439,7 +437,7 @@ TPZCompMesh *CMesh_v(TPZGeoMesh *gmesh, int pOrder)
     TPZMaterial * BCond2 = material->CreateBC(material, matBCleft, penetration, val1, val2); //Cria material que implementa a condicao de contorno esquerda
     cmesh->InsertMaterialObject(BCond2); //Insere material na malha
     
-    //    TPZMaterial * BCond4 = material->CreateBC(material, matBCholes, dirichlet, val1, val2); //Cria material que implementa a condicao de contorno direita
+    //    TPZMaterial * BCond4 = material->CreateBC(material, matFrac, dirichlet, val1, val2); //Cria material que implementa a condicao de contorno direita
     //    cmesh->InsertMaterialObject(BCond4); //Insere material na malha
     
     //Criando elementos computacionais que gerenciarão o espaco de aproximacao da malha:
