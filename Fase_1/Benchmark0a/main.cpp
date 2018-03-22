@@ -362,8 +362,6 @@ TPZGeoMesh *CreateGMesh()
     TPZVTKGeoMesh::PrintGMeshVTK(gmesh, bf);
     return gmesh;
     
-    
-    
 }
 
 void UniformRefine(TPZGeoMesh* gmesh, int nDiv)
@@ -418,7 +416,7 @@ TPZCompMesh *CMesh_v(TPZGeoMesh *gmesh, int pOrder)
     
     //Condições de contorno:
     
-    TPZFMatrix<STATE> val1(1,1,0.), val2(2,1,0.);
+    TPZFMatrix<STATE> val1(1,1,0.), val2(3,1,0.);
     
     TPZMaterial * BCond0 = material->CreateBC(material, matBCbott, dirichlet, val1, val2); //Cria material que implementa a condição de contorno inferior
     cmesh->InsertMaterialObject(BCond0); //Insere material na malha
@@ -432,8 +430,8 @@ TPZCompMesh *CMesh_v(TPZGeoMesh *gmesh, int pOrder)
     TPZMaterial * BCond2 = material->CreateBC(material, matBCleft, dirichlet, val1, val2); //Cria material que implementa a condicao de contorno esquerda
     cmesh->InsertMaterialObject(BCond2); //Insere material na malha
     
-    TPZMaterial * BCond4 = material2->CreateBC(material2, matFrac, dirichlet, val1, val2); //Cria material que implementa a condicao de contorno direita
-    cmesh->InsertMaterialObject(BCond4); //Insere material na malha
+  //  TPZMaterial * BCond4 = material2->CreateBC(material2, matFrac, dirichlet, val1, val2); //Cria material que implementa a condicao de contorno direita
+  //  cmesh->InsertMaterialObject(BCond4); //Insere material na malha
     
     //Criando elementos computacionais que gerenciarão o espaco de aproximacao da malha:
     
@@ -565,12 +563,12 @@ TPZCompMesh *CMesh_m(TPZGeoMesh *gmesh, int pOrder)
     
     //Condições de contorno:
     
-    TPZFMatrix<STATE> val1(1,1,0.), val2(2,1,0.);
+    TPZFMatrix<STATE> val1(1,1,0.), val2(3,1,0.);
     
     val2(0,0) = 0.0; // vx -> 0
     val2(1,0) = 0.0; // vy -> 0
     
-    TPZMaterial * BCond0 = material->CreateBC(material, matBCbott, penetration, val1, val2); //Cria material que implementa a condição de contorno inferior
+    TPZMaterial * BCond0 = material->CreateBC(material, matBCbott, neumann , val1, val2); //Cria material que implementa a condição de contorno inferior
     //BCond0->SetForcingFunction(p_exact1, bc_inte_order);
     BCond0->SetForcingFunction(sol_exact1,bc_inte_order);
     cmesh->InsertMaterialObject(BCond0); //Insere material na malha
@@ -581,18 +579,18 @@ TPZCompMesh *CMesh_m(TPZGeoMesh *gmesh, int pOrder)
     cmesh->InsertMaterialObject(BCond1); //Insere material na malha
     
     
-    TPZFMatrix<STATE> val2rg(2,1,0.);
+    TPZFMatrix<STATE> val2rg(3,1,0.);
     val2rg(0,0)=1.;
     
-    TPZMaterial * BCond3 = material->CreateBC(material, matBCright, penetration, val1, val2); //Cria material que implementa a condicao de contorno direita
+    TPZMaterial * BCond3 = material->CreateBC(material, matBCright, neumann, val1, val2); //Cria material que implementa a condicao de contorno direita
     //BCond3->SetForcingFunction(p_exact1,bc_inte_order);
     //BCond3->SetForcingFunction(solucao_exact1,bc_inte_order);
     cmesh->InsertMaterialObject(BCond3); //Insere material na malha
     
-    TPZFMatrix<STATE> val2lf(2,1,0.);
+    TPZFMatrix<STATE> val2lf(3,1,0.);
     val2lf(0,0)=1.;
     
-    TPZMaterial * BCond2 = material->CreateBC(material, matBCleft, penetration, val1, val2); //Cria material que implementa a condicao de contorno esquerda
+    TPZMaterial * BCond2 = material->CreateBC(material, matBCleft, neumann, val1, val2); //Cria material que implementa a condicao de contorno esquerda
     //BCond2->SetForcingFunction(p_exact1,bc_inte_order);
     //BCond2->SetForcingFunction(solucao_exact2,bc_inte_order);
     cmesh->InsertMaterialObject(BCond2); //Insere material na malha
@@ -657,7 +655,7 @@ void AddMultiphysicsInterfaces(TPZCompMesh &cmesh, int matfrom, int mattarget)
                     TPZMultiphysicsInterfaceElement *intf = new
                     TPZMultiphysicsInterfaceElement(cmesh,gelbc.CreatedElement(),index,celneigh,celside);
                     intf->SetLeftRightElementIndices(LeftElIndices,RightElIndices);
-                    
+            
                 }
                 neighbour = neighbour.Neighbour();
             }
