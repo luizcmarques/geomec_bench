@@ -1,5 +1,5 @@
 /*
- *  TPZDarcyPMaterial.h
+ *  TPZDarcy2DMaterial.h
  *  PZ
  *
  *  Created by Pablo G S Carvalho on 08/09/16.
@@ -16,12 +16,12 @@
 #include "pzmaterial.h"
 
 
-#ifndef TPZDARCYPMATERIAL
-#define TPZDARCYPMATERIAL
+#ifndef TPZDARCY2DMATERIAL
+#define TPZDARCY2DMATERIAL
 
 
 
-class TPZDarcyPMaterial : public TPZMatWithMem<TPZFMatrix<STATE>, TPZDiscontinuousGalerkin >  {
+class TPZDarcy2DMaterial : public TPZMatWithMem<TPZFMatrix<STATE>, TPZDiscontinuousGalerkin >  {
     
 private:
     
@@ -47,23 +47,23 @@ public:
     /**
      * Empty Constructor
      */
-    TPZDarcyPMaterial();
+    TPZDarcy2DMaterial();
     
     /** Creates a material object and inserts it in the vector of
      *  material pointers of the mesh.
      */
-    TPZDarcyPMaterial(int matid, int dimension, int space, STATE viscosity, STATE permeability, STATE theta);
+    TPZDarcy2DMaterial(int matid, int dimension, int space, STATE viscosity, STATE permeability, STATE theta);
     
     
     /** Creates a material object based on the referred object and
      *  inserts it in the vector of material pointers of the mesh.
      */
-    TPZDarcyPMaterial(const TPZDarcyPMaterial &mat);
+    TPZDarcy2DMaterial(const TPZDarcy2DMaterial &mat);
     
     /**
      * Destructor
      */
-    ~TPZDarcyPMaterial();
+    ~TPZDarcy2DMaterial();
     
     /** Fill material data parameter with necessary requirements for the
      * Contribute method. Here, in base class, all requirements are considered
@@ -86,7 +86,7 @@ public:
     
     /** returns the name of the material */
     std::string Name() {
-        return "TPZDarcyPMaterial";
+        return "TPZDarcy2DMaterial";
     }
     
     /** returns the integrable dimension of the material */

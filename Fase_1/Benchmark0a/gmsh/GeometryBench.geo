@@ -74,13 +74,13 @@ pr = 1;
   Physical Line("right") = {2};
   Physical Line("left") = {4};
   Physical Line("frac") = {5};
+  Physical Point("PointLeft") = {5};
+  Physical Point("PointRight") = {6};
   
   //Physical Line("holes") = {holes[]};  
   //Physical Surface("interface") = {23};
 
   
   Coherence Mesh;
-
-
 
 
