@@ -12,6 +12,12 @@
 #include "pzanalysis.h"
 #include "pzbndcond.h"
 
+#include "pzinterpolationspace.h"
+#include "pzintel.h"
+#include "TPZInterfaceEl.h"
+#include "TPZMultiphysicsInterfaceEl.h"
+#include "pzmultiphysicselement.h"
+
 #include "TPZDarcy1DMaterial.h"
 #include "TPZDarcy2DMaterial.h"
 #include <pzgeoel.h>
@@ -89,12 +95,14 @@ const int matID = 1; //Materia do elemento volumétrico
 //const int matFrac = 11; //Materia do elemento 1D, fratura
 const int matBCbott = 2, matBCtop = 3, matBCright = 4, matBCleft = 5, matFrac = 6, matPointLeft = 7, matPointRight = 8; //Materiais das condições de contorno
 const int matInterface = 17; //Material do elemento de interface
-const int matIntBCbott = matBCbott+10, matIntBCtop=matBCtop+10,  matIntBCright=matBCright+10, matIntBCleft=matBCleft+10, matIntFrac=matFrac+10; //Materiais das condições de contorno (elementos de interface)
+
+const int matFluxWrap = 21;
 //const int matPoint =-5;//Materia de um ponto
 int dirichlet = 0, neumann = 1, penetration = 2, pointtype=5, dirichletPress=6; //Condições de contorno do problema ->default Dirichlet na esquerda e na direita
 const REAL visco=1., perm=1., theta=-1.; //Coeficientes: viscosidade, fator simetria
 
 void AddMultiphysicsInterfaces(TPZCompMesh &cmesh);
+void BreakConnectivity(TPZCompMesh &cmesh, int matId);
 
 using namespace std;
 
@@ -135,34 +143,39 @@ int main(int argc, char *argv[])
     TPZCompMesh *cmesh_p = CMesh_p(gmesh, pOrder); //Função para criar a malha computacional da pressão
     TPZCompMesh *cmesh_m = CMesh_m(gmesh, pOrder); //Função para criar a malha computacional multifísica
     
-#ifdef PZDEBUG
-    {
-        std::ofstream filecv("MalhaC_v.txt"); //Impressão da malha computacional da velocidade (formato txt)
-        std::ofstream filecp("MalhaC_p.txt"); //Impressão da malha computacional da pressão (formato txt)
-        cmesh_v->Print(filecv);
-        cmesh_p->Print(filecp);
-    }
-#endif
+    
+    
+    std::ofstream filecv("MalhaC_v.txt"); //Impressão da malha computacional da velocidade (formato txt)
+    std::ofstream filecp("MalhaC_p.txt"); //Impressão da malha computacional da pressão (formato txt)
+    cmesh_v->Print(filecv);
+    cmesh_p->Print(filecp);
+
+    BreakConnectivity(*cmesh_v, matFrac);
+
     
     TPZManVector<TPZCompMesh *, 2> meshvector(2);
     meshvector[0] = cmesh_v;
     meshvector[1] = cmesh_p;
+    
+    meshvector[0]->ExpandSolution();
     TPZBuildMultiphysicsMesh::AddElements(meshvector, cmesh_m);
     TPZBuildMultiphysicsMesh::AddConnects(meshvector, cmesh_m);
     TPZBuildMultiphysicsMesh::TransferFromMeshes(meshvector, cmesh_m);
     cmesh_m->LoadReferences();
     
-    
-   // AddMultiphysicsInterfaces(*cmesh_m);
+
 
     
-#ifdef PZDEBUG
+    AddMultiphysicsInterfaces(*cmesh_m);
+    
+    
+
     std::ofstream fileg1("MalhaGeo2.txt"); //Impressão da malha geométrica (formato txt)
     gmesh->Print(fileg1);
     
     std::ofstream filecm("MalhaC_m.txt"); //Impressão da malha computacional multifísica (formato txt)
     cmesh_m->Print(filecm);
-#endif
+
     
     //Resolvendo o Sistema:
     int numthreads = 0;
@@ -402,7 +415,7 @@ TPZCompMesh *CMesh_v(TPZGeoMesh *gmesh, int pOrder)
     //Definição do espaço de aprximação:
     
     TPZMat2dLin *material = new TPZMat2dLin(matID); //Criando material que implementa a formulação fraca do problema modelo
-    TPZMat2dLin *materialFrac = new TPZMat2dLin(matFrac);
+    TPZMat1dLin *materialFrac = new TPZMat1dLin(matFrac);
     
     cmesh->InsertMaterialObject(material); //Insere material na malha
     cmesh->InsertMaterialObject(materialFrac); //Insere material na malha
@@ -413,9 +426,9 @@ TPZCompMesh *CMesh_v(TPZGeoMesh *gmesh, int pOrder)
     
     cmesh->SetAllCreateFunctionsHDiv(); //Criando funções HDIV:
  
-    TPZFMatrix<STATE> xkin(1,1,0.), xcin(1,1,0.), xfin(1,1,0.);
+    TPZFMatrix<STATE> xkin(1,1,0.), xcin(1,1,0.), xbin(1,1,0.), xfin(1,1,0.);
     material->SetMaterial(xkin, xcin, xfin);
-    materialFrac->SetMaterial(xkin, xcin, xfin);
+    materialFrac->SetMaterial(xkin, xcin, xbin, xfin);
     
     //Condições de contorno:
     
@@ -441,10 +454,18 @@ TPZCompMesh *CMesh_v(TPZGeoMesh *gmesh, int pOrder)
     TPZMaterial * BCond5 = materialFrac->CreateBC(materialFrac, matPointLeft , dirichlet, val1, val2); //Cria material que implementa a condicao de contorno esquerda
     cmesh->InsertMaterialObject(BCond5); //Insere material na malha
     
+    //Criando material para FluxWrap
+    
+    TPZBndCond *FluxWrapBC;
+    FluxWrapBC = material->CreateBC(material,matFluxWrap,dirichlet,val1,val2);
+    cmesh->InsertMaterialObject(FluxWrapBC);
+
     //Criando elementos computacionais que gerenciarão o espaco de aproximacao da malha:
+
     
     
     int ncel = cmesh->NElements();
+    
     for(int i =0; i<ncel; i++){
         TPZCompEl * compEl = cmesh->ElementVec()[i];
         if(!compEl) continue;
@@ -453,22 +474,29 @@ TPZCompMesh *CMesh_v(TPZGeoMesh *gmesh, int pOrder)
         
     }
     
-//    std::set<int> matids;
-//    matids.insert(matID);
-//    matids.insert(matBCbott);
-//    matids.insert(matBCright);
-//    matids.insert(matBCtop);
-//    matids.insert(matBCleft);
-//    cmesh->AutoBuild(matids);
-//
-//    gmesh->ResetReference();
-//    matids.clear();
-//    matids.insert(matFrac);
+    std::set<int> matids;
+    matids.insert(matID);
+    matids.insert(matBCbott);
+    matids.insert(matBCright);
+    matids.insert(matBCtop);
+    matids.insert(matBCleft);
+    matids.insert(matFluxWrap);
+    
+    cmesh->AutoBuild(matids);
 
-    //cmesh->AutoBuild(matids);
-    cmesh->AutoBuild();
+    cmesh->SetDimModel(dimFrac);
+    gmesh->ResetReference();
+    matids.clear();
+    matids.insert(matFrac);
+    matids.insert(matPointLeft);
+    matids.insert(matPointRight);
+
+    cmesh->AutoBuild(matids);
+//    cmesh->AutoBuild();
     cmesh->AdjustBoundaryElements();
     cmesh->CleanUpUnconnectedNodes();
+    //cmesh->ExpandSolution();
+    
     
     return cmesh;
     
@@ -634,8 +662,11 @@ TPZCompMesh *CMesh_m(TPZGeoMesh *gmesh, int pOrder)
     TPZMaterial * BCond5 = materialFrac->CreateBC(materialFrac, matPointLeft , dirichlet, val1, val2); //Cria material que implementa a condicao de contorno direita
     cmesh->InsertMaterialObject(BCond5); //Insere material na malha
     
-
     
+    val1(0,0) = 0.0;
+    
+    TPZBndCond *FluxWrapBC = material->CreateBC(material,matFluxWrap,dirichlet,val1,val2);
+    cmesh->InsertMaterialObject(FluxWrapBC);
     
     
     int ncel = cmesh->NElements();
@@ -644,7 +675,6 @@ TPZCompMesh *CMesh_m(TPZGeoMesh *gmesh, int pOrder)
         if(!compEl) continue;
         TPZInterfaceElement * facel = dynamic_cast<TPZInterfaceElement *>(compEl);
         if(facel)DebugStop();
-        
     }
     
     
@@ -658,6 +688,102 @@ TPZCompMesh *CMesh_m(TPZGeoMesh *gmesh, int pOrder)
     
 }
 
+void BreakConnectivity (TPZCompMesh &cmesh, int matId)
+{
+
+    TPZGeoMesh *gmesh = cmesh.Reference();
+    gmesh->ResetReference();
+    cmesh.LoadReferences();
+    int64_t ncel = cmesh.NElements();
+    
+    
+    for (int64_t el=0; el<ncel; el++) {
+        TPZCompEl *cel = cmesh.Element(el);
+        if (!cel || !cel->Reference()) {
+            continue;
+        }
+        TPZGeoEl *gel = cel->Reference();
+        if(gel->MaterialId()!=matId){
+            continue;
+        }
+        if(gel->Dimension()!=dim-1){
+            DebugStop();
+        }
+        
+        TPZStack<TPZCompElSide> neigh;
+        int nsides = gel->NSides();
+        
+        TPZGeoElSide gelside(gel,nsides-1);
+        TPZGeoElSide neighbour = gelside.Neighbour();
+        
+        gelside.EqualLevelCompElementList(neigh, 0, 0);
+        
+        if(neigh.size()!=2){
+            DebugStop();
+        }
+        
+        neigh[0].Element()->Reference()->ResetReference();
+        neigh[1].Element()->Reference()->ResetReference();
+        
+        //working on element 0
+        {
+            TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement*>(neigh[0].Element());
+            
+            if(!intel){
+                DebugStop();
+            }
+            
+            intel->LoadElementReference();
+            
+            int locindex = intel->MidSideConnectLocId(neigh[0].Side());
+            TPZConnect &midsideconnect = intel->MidSideConnect(neigh[0].Side());
+            if(midsideconnect.NElConnected() != 2)
+            {
+                DebugStop();
+            }
+            
+            //Duplica um connect
+            int64_t index = cmesh.AllocateNewConnect(midsideconnect.NShape(), midsideconnect.NState(), midsideconnect.Order());
+            
+            intel->SetConnectIndex(locindex, index);
+            midsideconnect.DecrementElConnected();
+            cmesh.ConnectVec()[index].IncrementElConnected();
+            intel->SetSideOrient(neigh[0].Side(), 1);
+            
+            
+            
+            TPZGeoElBC bc(intel->Reference(),neigh[0].Side(),matFluxWrap);
+            cmesh.CreateCompEl(bc.CreatedElement(), index);
+            
+            intel->Reference()->ResetReference();
+            
+            
+        }
+        
+        // working on element 1
+        {
+            TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement*>(neigh[1].Element());
+            
+            if(!intel){
+                DebugStop();
+            }
+            
+            intel->LoadElementReference();
+            
+            intel->SetSideOrient(neigh[1].Side(), 1);
+            
+            int64_t index;
+            
+            TPZGeoElBC bc(intel->Reference(),neigh[1].Side(),matFluxWrap);
+            cmesh.CreateCompEl(bc.CreatedElement(), index);
+            
+            intel->Reference()->ResetReference();
+            
+        }
+        
+    }
+
+}
 
 void AddMultiphysicsInterfaces(TPZCompMesh &cmesh)
 {
@@ -671,38 +797,38 @@ void AddMultiphysicsInterfaces(TPZCompMesh &cmesh)
     for (int64_t el=0; el<nel; el++) {
         TPZGeoEl *gel = gmesh->Element(el);
         int matid = gel->MaterialId();
-        if(velmatid.find(matid) != velmatid.end())
+        if(velmatid.find(matid) == velmatid.end())
         {
-            int nsides = gel->NSides();
-            TPZGeoElSide gelside(gel,nsides-1);
-            TPZGeoElSide neighbour = gelside.Neighbour();
-            while (neighbour != gelside) {
-                
-                TPZManVector<int64_t,3> LeftElIndices(1,0.),RightElIndices(1,0.);
-                LeftElIndices[0]=0;
-                RightElIndices[0]=0;
-                
-                if (neighbour.Element()->Dimension() == 2 && neighbour.Element()->MaterialId() == matID && gelside.Element()->MaterialId() == matFrac) { //oioioi IDFlux -> ID
-                    // create an interface element
-                    TPZCompElSide celside = gelside.Reference();
-                    TPZCompElSide celneigh = neighbour.Reference();
-                    if (!celside || !celneigh) {
-                        DebugStop();
-                    }
-                    std::cout << "Created an element between volumetric element " << neighbour.Element()->Index() <<
-                    " side " << neighbour.Side() <<
-                    " and interface element " << gelside.Element()->Index() << std::endl;
-                    TPZGeoElBC gelbc(gelside,matID);
-                    int64_t index;
-                    TPZMultiphysicsInterfaceElement *intf = new
-                    TPZMultiphysicsInterfaceElement(cmesh,gelbc.CreatedElement(),index,celneigh,celside);
-                    intf->SetLeftRightElementIndices(LeftElIndices,RightElIndices);
-            
-                }
-                neighbour = neighbour.Neighbour();
-            }
+            continue;
         }
+        int nsides = gel->NSides();
+        TPZGeoElSide gelside(gel,nsides-1);
+        TPZGeoElSide neighbour = gelside.Neighbour();
+        while (neighbour != gelside) {
+            
+            TPZManVector<int64_t,3> LeftElIndices(1,0.),RightElIndices(1,0.);
+            LeftElIndices[0]=0;
+            RightElIndices[0]=1;
+            
+            if (neighbour.Element()->Dimension() == 1 && neighbour.Element()->MaterialId() == matFluxWrap) { //oioioi IDFlux -> ID
+                // create an interface element
+                TPZCompElSide celside = gelside.Reference();
+                TPZCompElSide Wrapneigh = neighbour.Reference();
+                if (!celside || !Wrapneigh) {
+                    DebugStop();
+                }
+                std::cout << "Created an element between volumetric element " << neighbour.Element()->Index() <<
+                " side " << neighbour.Side() <<
+                " and interface element " << gelside.Element()->Index() << std::endl;
+                TPZGeoElBC gelbc(gelside,matID);
+                int64_t index;
+                TPZMultiphysicsInterfaceElement *intf = new
+                TPZMultiphysicsInterfaceElement(cmesh,gelbc.CreatedElement(),index,Wrapneigh,celside);
+                intf->SetLeftRightElementIndices(LeftElIndices,RightElIndices);
         
+            }
+            neighbour = neighbour.Neighbour();
+        }
     }
     
 }

@@ -35,29 +35,37 @@ pr = 1;
 
   //Domínio Omega  
   Line(1) = {1, 2};
-  Line(2) = {2, 3};
-  Line(3) = {3, 4};
-  Line(4) = {4, 1};  
+  Line(2) = {2, 6};
+  Line(3) = {6, 3};
+  Line(4) = {3, 4};  
+  Line(5) = {4, 5};
+  Line(6) = {5, 1};
 
   //Fratura
-  Line(5) = {5, 6};
+  Line(7) = {5, 6};
 
-  Transfinite Line{1,3} = nx Using Progression pr;
-  Transfinite Line{2,4} = ny Using Progression pr;
-  Transfinite Line{5} = nx Using Progression pr;
+  Transfinite Line{1,4} = nx Using Progression pr;
+  Transfinite Line{2,3,5,6} = ny Using Progression pr;
+  Transfinite Line{7} = nx Using Progression pr;
 
 
 // Definição da superfície 
 
-  Line Loop(5) = {1, 2, 3, 4};
- 
-  Plane Surface(6) = {5};
+  Line Loop(5) = {1, 2, -7, 6};
+   Line Loop(6) = {7, 3, 4, 5};
 
-  Transfinite Surface {6} = {1,2,3,4};
+  Plane Surface(6) = {5};
+  Plane Surface(7) = {6};
+
+ // Line{7} in Surface{6};
+
+  Transfinite Surface {6} = {1,2,6,5};
+  Transfinite Surface {7} = {5,6,3,4};
 
   If(IsquadQ)
 
   Recombine Surface {6};
+  Recombine Surface {7};
 
   EndIf
 
@@ -68,12 +76,12 @@ pr = 1;
  //  Recombine;
  // }
 
-  Physical Surface("Omega") = {6};
+  Physical Surface("Omega") = {6,7};
   Physical Line("bottom") = {1};
-  Physical Line("top") = {3};
-  Physical Line("right") = {2};
-  Physical Line("left") = {4};
-  Physical Line("frac") = {5};
+  Physical Line("top") = {4};
+  Physical Line("right") = {2,3};
+  Physical Line("left") = {5,6};
+  Physical Line("frac") = {7};
   Physical Point("PointLeft") = {5};
   Physical Point("PointRight") = {6};
   
