@@ -19,22 +19,37 @@ TPZDarcy2DMaterial::TPZDarcy2DMaterial() : TPZMatWithMem<TPZFMatrix<STATE>, TPZD
     TPZFNMatrix<3,STATE> Vl(1,1,0.);
     this->SetDefaultMem(Vl);
     fk=1.;
+    fViscosity=1.;
+    fTensorK.Resize(fDimension, fDimension);
+    fInvK.Resize(fDimension, fDimension);
+    for (int i=0; i<fDimension; i++) {
+        fTensorK(i,i) = 1.;
+        fInvK(i,i) = 1.;
+    }
     
 }
 
 ////////////////////////////////////////////////////////////////////
 
-TPZDarcy2DMaterial::TPZDarcy2DMaterial(int matid, int dimension, int space, STATE viscosity, STATE permeability, STATE theta) : TPZMatWithMem<TPZFMatrix<STATE>, TPZDiscontinuousGalerkin >(matid),fDimension(dimension),fSpace(space),fViscosity(viscosity),fk(permeability),fTheta(theta)
+TPZDarcy2DMaterial::TPZDarcy2DMaterial(int matid, int dimension, int space, STATE theta) : TPZMatWithMem<TPZFMatrix<STATE>, TPZDiscontinuousGalerkin >(matid),fDimension(dimension),fSpace(space),fTheta(theta)
 {
 
     TPZFNMatrix<3,STATE> Vl(1,1,0.);
     this->SetDefaultMem(Vl);
+    fk=1.;
+    fViscosity=1.;
+    fTensorK.Resize(fDimension, fDimension);
+    fInvK.Resize(fDimension, fDimension);
+    for (int i=0; i<fDimension; i++) {
+        fTensorK(i,i) = 1.;
+        fInvK(i,i) = 1.;
+    }
     
 }
 
 ////////////////////////////////////////////////////////////////////
 
-TPZDarcy2DMaterial::TPZDarcy2DMaterial(const TPZDarcy2DMaterial &mat) : TPZMatWithMem<TPZFMatrix<STATE>, TPZDiscontinuousGalerkin >(mat),fDimension(mat.fDimension),fSpace(mat.fSpace),fViscosity(mat.fViscosity),fk(mat.fk), fTheta(mat.fTheta)
+TPZDarcy2DMaterial::TPZDarcy2DMaterial(const TPZDarcy2DMaterial &mat) : TPZMatWithMem<TPZFMatrix<STATE>, TPZDiscontinuousGalerkin >(mat),fDimension(mat.fDimension),fSpace(mat.fSpace), fTheta(mat.fTheta)
 {
     
     
@@ -85,7 +100,7 @@ void TPZDarcy2DMaterial::FillBoundaryConditionDataRequirement(int type,TPZVec<TP
 
 void TPZDarcy2DMaterial::FillDataRequirementsInterface(TPZMaterialData &data)
 {
-    data.fNeedsNormal = true;
+    data.fNeedsNormal = false;
 }
 
 
@@ -465,6 +480,9 @@ void TPZDarcy2DMaterial::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
         f[e] = 0.;
     }
     
+    TPZFNMatrix<9,REAL> PermTensor = fTensorK;
+    TPZFNMatrix<9,REAL> InvPermTensor = fInvK;
+    
     TPZFMatrix<STATE> phiVi(fDimension,1,0.0),phiVj(fDimension,1,0.0);
     
     TPZFNMatrix<100,STATE> divphi;
@@ -486,6 +504,8 @@ void TPZDarcy2DMaterial::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
             
         }
         
+        
+        
         // matrix A - velocity * test-funtion velocity
         for(int j = 0; j < nshapeV; j++){
             int jphi = datavec[vindex].fVecShapeIndex[j].second;
@@ -497,12 +517,25 @@ void TPZDarcy2DMaterial::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
                 
             }
             
-            STATE val = InnerVec(phiVi, phiVj);
-            ek(i,j) += weight * (1./fk) * val ;
+            TPZFNMatrix<3,REAL> KphiVj(fDimension,1,0.);
+            //dot product between Kinv[u]v
+            for(int id=0; id<fDimension; id++){
+                for(int jd=0; jd<fDimension; jd++){
+                    KphiVj(id,0) += InvPermTensor(id,jd)*phiVj(jd,0);
+                }
+            }
             
+            
+            STATE val = InnerVec(phiVi, KphiVj);
+            ek(i,j) += weight * fViscosity * val ;
+           
+           // InvPermTensor.Print("InvK = ");
+          //  PermTensor.Print("K = ");
+//            KphiVj.Print("Kphi = ");
+//            phiVj.Print("phi = ");
         }
         
-        
+
         
         // matrix B and Bt - pressure * test-funtion velocity and symmetry
         for (int j = 0; j < nshapeP; j++) {
@@ -633,7 +666,7 @@ void TPZDarcy2DMaterial::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL wei
                 for(int i = 0; i < nshapeV; i++ )
                 {
                     
-                    ef(i,0) += weight * p_D * phiV(i,0);
+                    ef(i,0) += -weight * p_D * phiV(i,0);
                     
                 }
             

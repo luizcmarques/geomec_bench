@@ -23,7 +23,7 @@
 
 class TPZDarcy2DMaterial : public TPZMatWithMem<TPZFMatrix<STATE>, TPZDiscontinuousGalerkin >  {
     
-private:
+protected:
     
     /// dimension of the material
     int fDimension;
@@ -31,15 +31,26 @@ private:
     /// Aproximation Space for velocity
     int fSpace;
     
+    /** @brief Forcing function value */
+    REAL ff;
+    
     /// viscosidade
     STATE fViscosity;
     
     /** @brief Medium permeability. Coeficient which multiplies the gradient operator*/
     REAL fk;
     
+    /** @brief permeability tensor. Coeficient which multiplies the gradient operator*/
+    TPZFNMatrix<9,REAL> fTensorK;
+    
+    /** @brief inverse of the permeability tensor.*/
+    TPZFNMatrix<9,REAL> fInvK;
+    
     /// termo contrario a beta na sua formulacao (para ser conforme a literatura)
     STATE fTheta;
     
+    /** @brief Pointer to forcing function, it is the Permeability and its inverse */
+    TPZAutoPointer<TPZFunction<STATE> > fPermeabilityFunction;
     
 public:
     
@@ -52,7 +63,7 @@ public:
     /** Creates a material object and inserts it in the vector of
      *  material pointers of the mesh.
      */
-    TPZDarcy2DMaterial(int matid, int dimension, int space, STATE viscosity, STATE permeability, STATE theta);
+    TPZDarcy2DMaterial(int matid, int dimension, int space, STATE theta);
     
     
     /** Creates a material object based on the referred object and
@@ -82,7 +93,36 @@ public:
     
     void SetPermeability(REAL perm) {
         fk = perm;
+        fTensorK.Zero();
+        fInvK.Zero();
+        for (int i=0; i<fDimension; i++) {
+            fTensorK(i,i) = perm;
+            fInvK(i,i) = 1./perm;
+        }
     }
+    
+    //Set the permeability tensor and inverser tensor
+    void SetPermeabilityTensor(TPZFMatrix<REAL> K, TPZFMatrix<REAL> invK){
+        
+        //       if(K.Rows() != fDim || K.Cols() != fDim) DebugStop();
+        //       if(K.Rows()!=invK.Rows() || K.Cols()!=invK.Cols()) DebugStop();
+        
+        fTensorK = K;
+        fInvK = invK;
+    }
+    
+    void SetViscosity(REAL visc) {
+        fViscosity = visc;
+    }
+    
+    void GetPermeability(REAL &perm) {
+        perm = fk;
+    }
+    
+    void SetInternalFlux(REAL flux) {
+        ff = flux;
+    }
+    
     
     /** returns the name of the material */
     std::string Name() {
