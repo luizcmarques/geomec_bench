@@ -367,9 +367,9 @@ void TPZDarcy2DMaterial::ComputeDivergenceOnMaster(TPZVec<TPZMaterialData> &data
             ivectorindex = datavec[ublock].fVecShapeIndex[iq].first;
             ishapeindex = datavec[ublock].fVecShapeIndex[iq].second;
             
-            VectorOnXYZ(0,0) = datavec[ublock].fNormalVec(0,ivectorindex);
-            VectorOnXYZ(1,0) = datavec[ublock].fNormalVec(1,ivectorindex);
-            VectorOnXYZ(2,0) = datavec[ublock].fNormalVec(2,ivectorindex);
+            for (int i = 0;  i < fDimension; i++) {
+                VectorOnXYZ(i,0) = datavec[ublock].fNormalVec(i,ivectorindex);
+            }
             
             GradOfXInverse.Multiply(VectorOnXYZ, VectorOnMaster);
             VectorOnMaster *= JacobianDet;
@@ -471,7 +471,7 @@ void TPZDarcy2DMaterial::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
     TPZFNMatrix<220,REAL> dphiPx(fDimension,phiP.Cols());
     TPZAxesTools<REAL>::Axes2XYZ(dphiP, dphiPx, datavec[pindex].axes);
     
-    int nshapeV, nshapeP;
+    int nshapeV=0, nshapeP=0;
     nshapeP = phiP.Rows();
     nshapeV = datavec[vindex].fVecShapeIndex.NElements();
     
@@ -480,13 +480,13 @@ void TPZDarcy2DMaterial::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
         f[e] = 0.;
     }
     
-    TPZFNMatrix<9,REAL> PermTensor = fTensorK;
     TPZFNMatrix<9,REAL> InvPermTensor = fInvK;
+    
     
     TPZFMatrix<STATE> phiVi(fDimension,1,0.0),phiVj(fDimension,1,0.0);
     
     TPZFNMatrix<100,STATE> divphi;
-    STATE divu;
+    STATE divu=0.;
     this->ComputeDivergenceOnMaster(datavec, divphi, divu);
     
     
@@ -545,7 +545,7 @@ void TPZDarcy2DMaterial::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
                 GradPj[e] = dphiPx(e,j);
             }
             
-            STATE fact;
+            STATE fact=0.;
             if (HDivPiola == 1) {
                 fact  = weight * phiP(j,0) * divphi(i,0); ///p*div(U)
                 
@@ -584,7 +584,6 @@ void TPZDarcy2DMaterial::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
         ef(nshapeV+i,0) += factf;
         
     }
- 
     
 }
 

@@ -105,6 +105,8 @@ const REAL visco=1., perm=1., theta=-1.; //Coeficientes: viscosidade, fator sime
 void AddMultiphysicsInterfaces(TPZCompMesh &cmesh);
 void BreakConnectivity(TPZCompMesh &cmesh, int matId);
 
+void Plot_over_fractures(TPZCompMesh *cmesh);
+
 using namespace std;
 
 // definition of sol analytic
@@ -122,9 +124,13 @@ int main(int argc, char *argv[])
 #endif
     //Dados do problema:
     
-    HDivPiola = 1;
+    HDivPiola = 0;
     
     int pOrder = 2; //Ordem polinomial de aproximação
+    
+    if (pOrder<2) {
+        DebugStop();
+    }
     
     //Gerando malha geométrica:
     
@@ -151,7 +157,7 @@ int main(int argc, char *argv[])
         cmesh_p->Print(filecp);
     }
     
-    BreakConnectivity(*cmesh_v, matFrac);
+    BreakConnectivity(*cmesh_v, matFrac); // Insert new connects to represent normal fluxes
 
     {
         std::ofstream filecv("MalhaC_v.txt"); //Impressão da malha computacional da velocidade (formato txt)
@@ -188,6 +194,20 @@ int main(int argc, char *argv[])
     gmesh->Print(fileg1);
     
 
+//    // Printing element matrices
+//    TPZElementMatrix ek(cmesh_m, TPZElementMatrix::EK), ef(cmesh_m, TPZElementMatrix::EF);
+//    
+//    int n_cel = cmesh_m->NElements();
+//    for (int icel = 0 ; icel < n_cel; icel++) {
+//        TPZCompEl * cel = cmesh_m->Element(icel);
+//        if (!cel) {
+//            DebugStop();
+//        }
+//        
+//        cel->CalcStiff(ek, ef);
+//        std::cout << "icel = "<< icel << std::endl;
+//        ek.fMat.Print("ek = ",std::cout,EMathematicaInput);
+//    }
     
     //Resolvendo o Sistema:
     int numthreads = 0;
@@ -253,20 +273,68 @@ int main(int argc, char *argv[])
     TPZStack<std::string> scalnames, vecnames;
     scalnames.Push("P");
     vecnames.Push("V");
-    scalnames.Push("f");
-    vecnames.Push("V_exact");
-    scalnames.Push("P_exact");
     
-    int postProcessResolution = 2; //  keep low as possible
+    int postProcessResolution = 0; //  keep low as possible
     int dim = gmesh->Dimension();
     an.DefineGraphMesh(dim,scalnames,vecnames,plotfile);
     an.PostProcess(postProcessResolution,dim);
+    
+    std::cout << "Postprocessing fracture" << std::endl;
+    Plot_over_fractures(cmesh_m);
     
     std::cout << "FINISHED!" << std::endl;
     
     return 0;
 }
 
+void Plot_over_fractures(TPZCompMesh *cmesh){
+    // Counting for n_fractures
+    int ncel = cmesh->NElements();
+    TPZStack<int> frac_indexes;
+    for (int icel = 0; icel<ncel; icel++) {
+        TPZCompEl *cel=cmesh->Element(icel);
+        if (!cel) {
+            DebugStop();
+        }
+        TPZGeoEl *gel=cel->Reference();
+        if (!gel) {
+            DebugStop();
+        }
+        if (gel->MaterialId()!=matFrac) {
+            continue;
+        }
+        frac_indexes.Push(cel->Index());
+    }
+    
+    int n_frac_cels = frac_indexes.size();
+    int var_p = 0;
+    TPZVec<REAL> par_xi(1,0.0);
+    TPZManVector<STATE,3> sol,x(3,0.0);
+    TPZFMatrix<REAL> pressure(n_frac_cels*3,3,0.0);
+    
+    TPZManVector<REAL,3> par_vals(3,0.0);
+    par_vals[0] = -1.0;
+    par_vals[1] =  0.0;
+    par_vals[2] = +1.0;
+    
+    
+    for (int ifrac = 0; ifrac < n_frac_cels; ifrac++) {
+        
+        TPZCompEl *cel= cmesh->Element(frac_indexes[ifrac]);
+        TPZGeoEl *gel=cel->Reference();
+        for (int ip = 0; ip < par_vals.size(); ip++) {
+            par_xi[0] = par_vals[ip];
+            gel->X(par_xi, x);
+            cel->Solution(par_xi, var_p, sol);
+            pressure(ifrac*3+ip,0) = x[0];
+            pressure(ifrac*3+ip,1) = x[1];
+            pressure(ifrac*3+ip,2) = sol[0];
+        }
+        
+    }
+    
+    pressure.Print("pf = ",std::cout,EMathematicaInput);
+}
 
 // definition of v analytic
 void sol_exact1(const TPZVec<REAL> & x, TPZVec<STATE>& f, TPZFMatrix<STATE> &dsol){
@@ -496,8 +564,8 @@ TPZCompMesh *CMesh_v(TPZGeoMesh *gmesh, int pOrder)
     
     cmesh->AutoBuild(matids);
 
-    cmesh->SetDimModel(dimFrac);
-    cmesh->SetAllCreateFunctionsHDiv();
+//    cmesh->SetDimModel(dim);
+//    cmesh->SetAllCreateFunctionsHDiv();
     gmesh->ResetReference();
     matids.clear();
     matids.insert(matFrac);
@@ -509,10 +577,11 @@ TPZCompMesh *CMesh_v(TPZGeoMesh *gmesh, int pOrder)
     cmesh->AdjustBoundaryElements();
     cmesh->CleanUpUnconnectedNodes();
     
-    cmesh->SetDimModel(dim);
+    cmesh->SetDimModel(dimFrac);
     cmesh->SetAllCreateFunctionsHDiv();
     cmesh->ExpandSolution();
     
+    cmesh->SetDimModel(dim);
     return cmesh;
     
 }
@@ -592,7 +661,7 @@ TPZCompMesh *CMesh_p(TPZGeoMesh *gmesh, int pOrder)
     matids.clear();
     matids.insert(matFrac);
     cmesh->SetDimModel(dimFrac); //Insere dimensão do modelo
-
+    cmesh->SetDefaultOrder(pOrder-1); //Insere ordem polimonial de aproximação
     cmesh->AutoBuild(matids);
 
     
@@ -629,21 +698,19 @@ TPZCompMesh *CMesh_m(TPZGeoMesh *gmesh, int pOrder)
 
     TPZDarcy2DMaterial *material = new TPZDarcy2DMaterial(matID,dim,1,theta);//criando material que implementa a formulacao fraca do problema modelo
     TPZFMatrix<REAL> K(dim,dim),invK(dim,dim);
+    K.Zero();
+    invK.Zero();
     
-    
-    invK(0,0)=1./(3.38801);
-    invK(1,1)=1./(2.566*1.e-4);
-    K(0,0)=3.38801;
-    K(1,1)=2.566*1.e-4;
-//    invK(0,0)=1./(343.29);
-//    invK(1,1)=1./(0.026);
-
+    K(0,0)=3.38801e-7;
+    K(1,1)=2.566e-11;
+    invK(0,0)=1./K(0,0);
+    invK(1,1)=1./K(1,1);
     
     material->SetPermeabilityTensor(K, invK);
     
     TPZDarcy2DMaterial *materialFrac = new TPZDarcy2DMaterial(matFrac,dimFrac,1,theta);//criando material que implementa a formulacao fraca do problema modelo
-    REAL kf = 4.68789*1.e3;
-    REAL Dyf = 6.5*1.e-5;
+    REAL kf = 4.68789e-4;
+    REAL Dyf = 6.5e-5;
     materialFrac->SetPermeability(kf*Dyf);
     
     // Inserindo material na malha
