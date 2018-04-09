@@ -357,29 +357,35 @@ void TPZDarcy2DMaterial::ComputeDivergenceOnMaster(TPZVec<TPZMaterialData> &data
     QaxesT.Multiply(Jacobian, GradOfX);
     JacobianInverse.Multiply(Qaxes, GradOfXInverse);
     
+    TPZFMatrix<STATE> GradOfXInverseSTATE(GradOfXInverse.Rows(), GradOfXInverse.Cols());
+    for (unsigned int i = 0; i < GradOfXInverse.Rows(); ++i) {
+        for (unsigned int j = 0; j < GradOfXInverse.Cols(); ++j) {
+            GradOfXInverseSTATE(i,j) = GradOfXInverse(i,j);
+        }
+    }
+    
     int ivectorindex = 0;
     int ishapeindex = 0;
     
     if (HDivPiola == 1)
     {
+        
         for (int iq = 0; iq < nphiuHdiv; iq++)
         {
             ivectorindex = datavec[ublock].fVecShapeIndex[iq].first;
             ishapeindex = datavec[ublock].fVecShapeIndex[iq].second;
             
-            for (int i = 0;  i < fDimension; i++) {
-                VectorOnXYZ(i,0) = datavec[ublock].fNormalVec(i,ivectorindex);
+            for (int k = 0; k < fDimension; k++) {
+                VectorOnXYZ(k,0) = datavec[ublock].fNormalVec(k,ivectorindex);
             }
             
             GradOfXInverse.Multiply(VectorOnXYZ, VectorOnMaster);
             VectorOnMaster *= JacobianDet;
             
             /* Contravariant Piola mapping preserves the divergence */
-            REAL dot = 0.0;
-            for (int i = 0;  i < fDimension; i++) {
-                dot += dphiuH1(i,ishapeindex)*VectorOnMaster(i,0);
+            for (int k = 0; k < fDimension; k++) {
+                DivergenceofPhi(iq,0) +=  dphiuH1(k,ishapeindex)*VectorOnMaster(k,0);
             }
-            DivergenceofPhi(iq,0) = (1.0/JacobianDet) * dot;
         }
         
     }
@@ -492,6 +498,7 @@ void TPZDarcy2DMaterial::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
     
     for(int i = 0; i < nshapeV; i++ )
     {
+        
         int iphi = datavec[vindex].fVecShapeIndex[i].second;
         int ivec = datavec[vindex].fVecShapeIndex[i].first;
         TPZFNMatrix<4> GradVi(fDimension,fDimension);
@@ -547,13 +554,11 @@ void TPZDarcy2DMaterial::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
             
             STATE fact=0.;
             if (HDivPiola == 1) {
-                fact  = weight * phiP(j,0) * divphi(i,0); ///p*div(U)
-                
+                fact  = weight * phiP(j,0) * divphi(i,0) / datavec[vindex].detjac; ///p*div(U)
             }
             else{
                 fact = weight * phiP(j,0) * Tr( GradVi ); ///p*div(U)
             }
-            
             
             // colocar vectoriais vezes pressao
             // Matrix B
