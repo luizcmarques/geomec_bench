@@ -2,6 +2,8 @@
 
 cmake_minimum_required (VERSION 2.8.0)
 
+set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE TYPE  INTERNAL FORCE )
+
 project (GeomecBench)
 
 IF (WIN32)
@@ -53,6 +55,18 @@ if(PTHREAD_LIB-NOTFOUND)
 endif()
 include_directories(${PTHREAD_INCLUDE})
 
+#message(${PTHREAD_INCLUDE})
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	set(PZDEBUG PZDEBUG)
+	add_definitions(-DPZDEBUG)
+endif()
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+	set(NODEBUG NODEBUG)
+	set(ZERO_INTERNAL_RESIDU ZERO_INTERNAL_RESIDU)
+        set(MAKEINTERNAL MAKEINTERNAL)
+	add_definitions(-DNODEBUG)
+endif()
 
 
 if(WIN32)
@@ -89,3 +103,5 @@ if(WIN32)
 endif()
 
 add_subdirectory(Fase_1/Benchmark0a)
+add_subdirectory(MHM_Frac)
+file(COPY DFN_data DESTINATION MHM_Frac)

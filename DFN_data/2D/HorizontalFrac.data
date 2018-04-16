@@ -1,0 +1,29 @@
+ 0 0 1 1 - Domain Size
+ 11 - Number of MHM domains
+ 0.033 0.0003 - Element size and Singular Element size
+#
+ 0 1000 - simulation type (0 = Steady State, 1 = time evolution) initial pressure
+#
+ 5 - number of materials
+ "Darcy" 2 1 flow 1000 1  - name dimension material_id material_type rho Perm
+ "BC" 1 -1 boundary 0 1000 - name dimension material_id bc_type value
+ "BCIN" 1 -1 boundary 0 1000 - name dimension material_id bc_type value
+ "BCOUT" 1 -2 boundary 0 0 - name dimension material_id bc_type value
+ "BCNOFLOW" 1 -3 boundary 1 0 - name dimension material_id bc_type value
+# 
+ 2 - number of timestep series
+ 1. 100 - delt nsteps
+ 10. 50 - delt nsteps 
+# 
+# define the post processing
+fracture3 - name of post processing file
+ 3 - number of output values
+ BCIN State - output the integral of the flux over the boundary condition
+ BCOUT State - output the integral of the flux over the boundary condition
+ f1 Flux -  output the integral of the flux over the boundary condition
+ 
+end - end of control data for simulation
+ 
+ NAME  'f1'   
+ CORNER    0.3    0.50     00.000000   0.700     0.50     00.000000    
+ PORO  0.001   PERM  10000  THICK  0.1  SATMAP  2 / 
