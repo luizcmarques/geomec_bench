@@ -720,8 +720,8 @@ void TPZFracSimulation::InsertDarcyMaterial(int matid, REAL permeability, REAL r
     
     fMHM->CMesh()->InsertMaterialObject(mat);
     
-    TPZVecL2 *vecmat = new TPZVecL2(matid);
-    fMHM->FluxMesh()->InsertMaterialObject(vecmat);
+//    TPZVecL2 *vecmat = new TPZVecL2(matid);
+//    fMHM->FluxMesh()->InsertMaterialObject(vecmat);
 //    TPZMatLaplacian *presmat = new TPZMatLaplacian(matid);
 //    presmat->SetDimension(dimension);
 //    fMHM->PressureMesh()->InsertMaterialObject(presmat);
@@ -750,9 +750,6 @@ void TPZFracSimulation::InsertDarcyBCMaterial(int matid, int dimension, int bcty
     
     fMHM->CMesh()->InsertMaterialObject(bcmat);
     
-    TPZMaterial *fluxmat = fMHM->FluxMesh()->FindMaterial(rootmat);
-    TPZBndCond *bnd = new TPZBndCond(fluxmat,matid,bctype,val1,val2);
-    fMHM->FluxMesh()->InsertMaterialObject(bnd);
     
     fMHM->fMaterialBCIds.insert(matid);
     
