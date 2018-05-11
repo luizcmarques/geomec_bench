@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
     MHM->DivideSkeletonElements(Configuration.numDivSkeleton);
     if (Configuration.Hybridize)
     {
-        MHM->Hybridize();
+        MHM->SetHybridize(true);
     }
 #ifdef PZDEBUG
     {
