@@ -36,6 +36,7 @@ void TPZFracSimulation::ReadDataFile(const std::string &rootname)
     int dimension = fMHM->GMesh()->Dimension();
     ReadDataFile(datafile);
     std::string meshfilename = rootname + ".msh";
+    std::cout << "Reading the mesh file " << meshfilename << std::endl;
     fGmsh.GeometricGmshMesh(meshfilename,fMHM->GMesh().operator->());
 #ifdef PZDEBUG
     if(fMHM->GMesh()->NElements() == 0)
