@@ -33,6 +33,11 @@ void TPZFracSimulation::ReadDataFile(const std::string &rootname)
 {
     std::string datafilename = rootname + ".data";
     std::ifstream datafile(datafilename);
+    if(!datafile)
+    {
+        std::cout << "Couldn't open " << datafilename << std::endl;
+        DebugStop();
+    }
     int dimension = fMHM->GMesh()->Dimension();
     ReadDataFile(datafile);
     std::string meshfilename = rootname + ".msh";
