@@ -865,6 +865,10 @@ void TPZFracSimulation::ReadFractures(std::ifstream &input)
         }
     }
     int64_t nfrac = fFracSet.fFractureVec.NElements();
+    if (fMHM->fMaterialBCIds.size() == 0) {
+        std::cout << "No boundary conditions read from the file\n";
+        DebugStop();
+    }
     int matid = *(fMHM->fMaterialBCIds.rbegin())+1;
     matid = (matid+10)-matid%10;
     for (int ifr=0; ifr<nfrac; ifr++) {

@@ -12,3 +12,8 @@ add_executable(FracFlowGmsh FracFlowGmsh.cpp TPZMatLaplacianHybrid.h TPZMatLapla
 
 target_link_libraries(FracFlowGmsh pz)
 
+add_executable(FractureIntersection TPZFractureIntersection.cpp TPZPointCloud.h TPZPointCloud.cpp FractureIntersectionConfig.h FractureIntersectionConfig.cpp)
+
+target_link_libraries(FractureIntersection pz)
+
+file(COPY BoxReservoir.geo DESTINATION .)

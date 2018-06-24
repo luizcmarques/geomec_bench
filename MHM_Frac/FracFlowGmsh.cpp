@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
     TPZFracSimulation frac(MHM);
     
     std::stringstream MHMPref;
-    MHMPref << "../test_Fracture3B";
+    MHMPref << "../test";
 
     frac.ReadDataFile(MHMPref.str());
     
