@@ -14,77 +14,59 @@ L = 200;
 Lf = 200;
 
 n_bc = 2;
-nx = 5;
-ny = 3;
-pr = 1;
+nx = 40;
+ny = 4;
+pr = 1.0;
 
 // Coordenadas dos pontos
 
   //Domínio Omega
-  Point(1) = {0, 0, 0, 1e+22};
-  Point(2) = {L, 0, 0, 1e+22};
-  Point(3) = {L, h, 0, 1e+22};
-  Point(4) = {0, h, 0, 1e+22};
+  p1 = newp; Point(p1) = {0, 0, 0};
+  p2 = newp; Point(p2) = {L, 0, 0};
+  p3 = newp; Point(p3) = {L, h, 0};
+  p4 = newp; Point(p4) = {0, h, 0};
 
   //Fratura
-  Point(5) = {50, a, 0, 1e+22};
-  Point(6) = {150, b, 0, 1e+22};  
+  p5 = newp; Point(p5) = {50, a, 0};
+  p6 = newp; Point(p6) = {150, b, 0};  
 
 // Fronteiras
 
   //Domínio Omega  
-  Line(1) = {1, 2};
-  Line(2) = {2, 3};
-  Line(3) = {3, 4};
-  Line(4) = {4, 1};  
+  l1 = newl; Line(l1) = {p1, p2};
+  l2 = newl; Line(l2) = {p2, p3};
+  l3 = newl; Line(l3) = {p3, p4};
+  l4 = newl; Line(l4) = {p4, p1};  
 
   //Fratura
-  Line(7) = {5, 6};
+  f1 = newl; Line(f1) = {p5, p6};
 
-  Transfinite Line{1,3} = nx Using Progression pr;
-  Transfinite Line{2,4} = ny Using Progression pr;
-  Transfinite Line{7} = nx Using Progression pr;
+  Transfinite Line{l1,l3} = nx Using Progression pr;
+  Transfinite Line{l2,l4} = ny Using Progression pr;
+  Transfinite Line{f1} = nx Using Progression pr;
 
 
 // Definição da superfície 
+  ll1 = newll; Line Loop(ll1) = {l1, l2, l3, l4};
+  s1 = news; Plane Surface(s1) = {ll1};
+  Line{f1} In Surface{s1};
+  Point{p5,p6} In Surface{s1};
 
-  Line Loop(5) = {1, 2, 3, 4};
-//  Line Loop(6) = {7, 3, 4, 5};
-
-  Plane Surface(6) = {5};
-//  Plane Surface(7) = {6};
-
- // Line{7} in Surface{6};
-
-  Transfinite Surface {6} = {1,2,3,4};
-//  Transfinite Surface {7} = {5,6,3,4};
+ // Transfinite Surface {s1};
 
   If(IsquadQ)
-
-  Recombine Surface {6};
-  Recombine Surface {7};
-
+    Recombine Surface {s1};
   EndIf
 
- // Physical Volume("internal") = {1};
- // Extrude {0, 0, 10} {
- //  //Surface{110};
- //  Layers{1};
- //  Recombine;
- // }
 
-  Physical Surface("Omega") = {6,7};
-  Physical Line("bottom") = {1};
-  Physical Line("top") = {4};
-  Physical Line("right") = {2,3};
-  Physical Line("left") = {5,6};
-  Physical Line("frac") = {7};
-  Physical Point("PointLeft") = {5};
-  Physical Point("PointRight") = {6};
-  
-  //Physical Line("holes") = {holes[]};  
-  //Physical Surface("interface") = {23};
-
+  Physical Surface("Omega") = {s1};
+  Physical Line("bottom") = {l1};
+  Physical Line("right") = {l2};
+  Physical Line("top") = {l3};
+  Physical Line("left") = {l4};
+  Physical Line("frac") = {f1};
+  Physical Point("PointLeft") = {p5};
+  Physical Point("PointRight") = {p6};
   
   Coherence Mesh;
 

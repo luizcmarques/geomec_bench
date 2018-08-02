@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 {
     
     MonofasicoElastico cenario0a;
-    cenario0a.Run(2);
+    cenario0a.Run(1);
 
     return 0;
 }

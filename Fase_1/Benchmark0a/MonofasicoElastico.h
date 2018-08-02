@@ -47,6 +47,8 @@
 #include "TPZParFrontStructMatrix.h"
 #include "TPZSpStructMatrix.h"
 
+#include "TPZFractureNeighborData.h"
+
 using namespace std;
 using namespace pzshape;
 
@@ -144,9 +146,9 @@ public:
     //Fractures structure
     void Plot_over_fractures(TPZCompMesh *cmesh);
     void BreakConnectivity(TPZCompMesh &cmesh, int matId);
+    void BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids);
     
     //Multiphysics Interfaces
-
     void AddMultiphysicsInterfaces(TPZCompMesh &cmesh);
     
     bool insert_fractures_Q = true;

@@ -125,7 +125,7 @@ void TPZPoroElasticMF2d::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
     
 	int nref =  datavec.size();
 	if (nref != 3 ) {
-		std::cout << " Erro.!! datavec tem que ser de tamanho 3 \n";
+	//	std::cout << " Erro.!! datavec tem que ser de tamanho 3 \n";
 	//	DebugStop();
 	}
 	
@@ -305,7 +305,7 @@ void TPZPoroElasticMF2d::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
 //        }
 //    }
     
-    ek.Print(std::cout);
+//    ek.Print(std::cout);
     
 #ifdef LOG4CXX
 	if(logdata->isDebugEnabled())
@@ -516,7 +516,7 @@ void TPZPoroElasticMF2d::ContributeBC(TPZVec<TPZMaterialData> &datavec,REAL weig
     
 	int nref =  datavec.size();
 	if (nref != 3) {
-		std::cout << " Error.! datavec has to be of size 3 \n";
+//		std::cout << " Error.! datavec has to be of size 3 \n";
 //		DebugStop();
 	}
 	if (bc.Val2().Rows() != 3) {

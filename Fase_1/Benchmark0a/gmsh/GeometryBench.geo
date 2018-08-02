@@ -14,8 +14,8 @@ L = 200;
 Lf = 200;
 
 n_bc = 2;
-nx = 19;
-ny = 3;
+nx = 8;
+ny = 4;
 pr = 1;
 
 // Coordenadas dos pontos
