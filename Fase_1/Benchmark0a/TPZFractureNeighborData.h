@@ -11,26 +11,44 @@
 #include <stdio.h>
 #include <iostream>
 #include <set>
-#include "pzcmesh.h"
-#include "pzcompel.h"
+#include "pzgmesh.h"
 #include "TPZVTKGeoMesh.h"
 
 class TPZFractureNeighborData {
   
 private:
     
-    std::set<int64_t> m_pivot_indexes;
+    int m_fracture_id;
     
-    std::set<int64_t> m_non_pivot_indexes;
+    TPZGeoMesh * m_geometry;
+    
+    std::vector<TPZGeoElSide> m_pivot_indexes;
+    
+    std::vector<TPZGeoElSide> m_non_pivot_indexes;
 
-    std::set<int64_t> m_fracture_indexes;
+    std::vector<int64_t> m_fracture_indexes;
     
-    std::set<int64_t> m_gel_left_indexes;
+    std::vector<int64_t> m_gel_left_indexes;
     
-    std::set<int64_t> m_gel_right_indexes;
+    std::vector<int64_t> m_gel_right_indexes;
     
     /// Insert left or Right neighbor element index
     void InsertNextNeighbor(TPZGeoEl * gel);
+    
+    /// For the fracture material identifier computes the pivots and non pivots nodes
+    void IdentifyPivotsAndNonPivots();
+    
+    /// Compute and insert the first left and right elements
+    void ComputeLeftAndRightSeeds();
+    
+    /// Insert left neighbor element index
+    void InsertLeftSideIndexes(TPZStack<TPZGeoElSide> & neighbors);
+    
+    /// Insert right neighbor element index
+    void InsertRightSideIndexes(TPZStack<TPZGeoElSide> & neighbors);
+    
+    /// Verify if the geometric element candidate is a neighbor by a face of the geometric target element
+    bool AreFaceNeighbors(TPZGeoEl * gel_target, TPZGeoEl * gel_candidate);
     
 public:
 
@@ -44,31 +62,37 @@ public:
     TPZFractureNeighborData(TPZFractureNeighborData & other);
     
     /// Constructor based on a computational mesh and fracture material id
-    TPZFractureNeighborData(TPZCompMesh & cmesh, int fracture_id);
+    TPZFractureNeighborData(TPZGeoMesh * geometry, int fracture_id);
 
+    /// Set fracture Identifier
+    void SetFractureIdentifier(int fracture_id);
+    
     /// Set node pivots and non pivots
-    void SetPivotIndexes(std::set<int64_t> & pivots, std::set<int64_t> & non_pivots);
+    void SetPivotIndexes(std::vector<TPZGeoElSide> & pivots, std::vector<TPZGeoElSide> & non_pivots);
     
     /// Set geometric fracture indexes
-    void SetFractureIndexes(std::set<int64_t> & fracture_indexes);
+    void SetFractureIndexes(std::vector<int64_t> & fracture_indexes);
     
     /// Set geometric indexes for left and right sides
-    void SetLeftRightIndexes(std::set<int64_t> & left_indexes, std::set<int64_t> & right_indexes);
+    void SetLeftRightIndexes(std::vector<int64_t> & left_indexes, std::vector<int64_t> & right_indexes);
+    
+    /// Get fracture Identifier
+    int & GetFractureIdentifier();
     
     /// Get node pivots
-    std::set<int64_t> & GetPivotIndexes();
+    std::vector<TPZGeoElSide> & GetPivotIndexes();
 
     /// Get node non pivots
-    std::set<int64_t> & GetNonPivotIndexes();
+    std::vector<TPZGeoElSide> & GetNonPivotIndexes();
 
     /// Get geometric fracture indexes
-    std::set<int64_t> & GetFractureIndexes();
+    std::vector<int64_t> & GetFractureIndexes();
     
     /// Get geometric indexes for left
-    std::set<int64_t> & GetLeftIndexes();
+    std::vector<int64_t> & GetLeftIndexes();
     
     /// Get geometric indexes for right
-    std::set<int64_t> & GetRightIndexes();
+    std::vector<int64_t> & GetRightIndexes();
     
 };
 

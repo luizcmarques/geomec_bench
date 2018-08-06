@@ -928,7 +928,7 @@ void MonofasicoElastico::BreakConnectivity(TPZCompMesh &cmesh, int matId)
 void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids)
 {
     for (unsigned int i_f = 0; i_f <  fracture_ids.size(); i_f++) {
-        TPZFractureNeighborData fracture(cmesh,fracture_ids[i_f]);
+        TPZFractureNeighborData fracture(cmesh.Reference(),fracture_ids[i_f]);
         int aka = 0;
     }
 }

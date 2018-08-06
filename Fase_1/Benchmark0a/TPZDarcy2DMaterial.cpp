@@ -851,8 +851,7 @@ void TPZDarcy2DMaterial::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMa
         int iphi1 = datavecleft[vindex].fVecShapeIndex[i1].second;
         int ivec1 = datavecleft[vindex].fVecShapeIndex[i1].first;
         
-        
-        
+
         TPZFNMatrix<9> GradV1ni(fDimension,1,0.),phiV1i(fDimension,1),phiV1ni(1,1,0.);
         
         
@@ -949,8 +948,6 @@ void TPZDarcy2DMaterial::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMa
     }
     
 
-    
-    
     
 }
 

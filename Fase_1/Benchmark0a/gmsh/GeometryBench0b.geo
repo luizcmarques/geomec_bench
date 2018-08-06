@@ -1,6 +1,6 @@
 
 
-IsquadQ = 1;
+IsquadQ = 0;
  
 Mesh.ElementOrder = 1;
 Mesh.SecondOrderLinear = 0;
@@ -14,7 +14,7 @@ L = 200;
 Lf = 200;
 
 n_bc = 2;
-nx = 40;
+nx = 20;
 ny = 4;
 pr = 1.0;
 
@@ -43,7 +43,7 @@ pr = 1.0;
 
   Transfinite Line{l1,l3} = nx Using Progression pr;
   Transfinite Line{l2,l4} = ny Using Progression pr;
-  Transfinite Line{f1} = nx Using Progression pr;
+  //Transfinite Line{f1} = nx Using Progression pr;
 
 
 // Definição da superfície 
