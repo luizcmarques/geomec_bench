@@ -133,6 +133,9 @@ public:
     
     /*  Malhas geometricas */
     TPZGeoMesh *CreateGMesh();
+    
+    /*  Uniform refinement */
+    void UniformRef(TPZGeoMesh * gmesh, int n_div);
 
     /* Malhas computacionais */
     TPZCompMesh *CMesh_E(TPZGeoMesh *gmesh, int pOrder); // Malha computacional de elasticidade

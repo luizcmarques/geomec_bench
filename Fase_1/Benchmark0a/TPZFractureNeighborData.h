@@ -25,30 +25,50 @@ private:
     std::vector<TPZGeoElSide> m_pivot_indexes;
     
     std::vector<TPZGeoElSide> m_non_pivot_indexes;
-
+        
     std::vector<int64_t> m_fracture_indexes;
     
-    std::vector<int64_t> m_gel_left_indexes;
+    std::set<int64_t> m_gel_left_indexes;
     
-    std::vector<int64_t> m_gel_right_indexes;
+    std::set<int64_t> m_gel_right_indexes;
     
-    /// Insert left or Right neighbor element index
-    void InsertNextNeighbor(TPZGeoEl * gel);
+    /// look if there is a fracture element neighbour (ok)
+    int64_t FractureNeighbourIndex(TPZGeoElSide gel_side);
     
-    /// For the fracture material identifier computes the pivots and non pivots nodes
-    void IdentifyPivotsAndNonPivots();
+    /// look if the element has a neighbour in left indices (ok)
+    bool HasLeftIndexNeighbour(int64_t gel_index);
     
-    /// Compute and insert the first left and right elements
-    void ComputeLeftAndRightSeeds();
+    /// look if the element has a neighbour in right indices (ok)
+    bool HasRightIndexNeighbour(int64_t gel_index);
     
-    /// Insert left neighbor element index
-    void InsertLeftSideIndexes(TPZStack<TPZGeoElSide> & neighbors);
+    /// Find all elements neighbour of a pivot (excluding lower dimension elements) (ok)
+    std::set<int64_t> PivotNeighbours(TPZGeoElSide pivot_side);
     
-    /// Insert right neighbor element index
-    void InsertRightSideIndexes(TPZStack<TPZGeoElSide> & neighbors);
+    /// Verify if the non pivot has been inserted on non pivot structure
+    bool HasInsertedNonPivot(TPZGeoElSide pivot_side);
     
-    /// Verify if the geometric element candidate is a neighbor by a face of the geometric target element
-    bool AreFaceNeighbors(TPZGeoEl * gel_target, TPZGeoEl * gel_candidate);
+    /// Verify if the pivot has been inserted on pivot structure
+    bool HasInsertedPivot(TPZGeoElSide pivot_side);
+    
+    /// verify if the pivot has at least one element left and one element right as neighbour (ok)
+    bool HasClassifiedNeighbour(TPZGeoElSide & pivot_side);
+    
+    /// Find the 2 elements that will initiate the element sets
+    // m_gel_left_indexes and m_gel_right_indexes have to be empty
+    // take a neighbouring fracture element - insert its two neighbours along the face (ok)
+    void InsertFractureNeighbours(std::set<int64_t> pivot_neighbours);
+    
+    /// Classify elements into left and right elements (ok)
+    void ClassifyElements(std::set<int64_t> pivot_neighbours);
+    
+    /// look for all fracture elements (ok)
+    void BuildFractureElements();
+    
+    /// build the pivot and non pivot data structure (ok)
+    void BuildPivotDataStructure();
+    
+    /// Classify the neighbouring elements of the pivots
+    void ClassifyNeighboursofPivots();
     
 public:
 
@@ -67,17 +87,8 @@ public:
     /// Set fracture Identifier
     void SetFractureIdentifier(int fracture_id);
     
-    /// Set node pivots and non pivots
-    void SetPivotIndexes(std::vector<TPZGeoElSide> & pivots, std::vector<TPZGeoElSide> & non_pivots);
-    
-    /// Set geometric fracture indexes
-    void SetFractureIndexes(std::vector<int64_t> & fracture_indexes);
-    
-    /// Set geometric indexes for left and right sides
-    void SetLeftRightIndexes(std::vector<int64_t> & left_indexes, std::vector<int64_t> & right_indexes);
-    
-    /// Get fracture Identifier
-    int & GetFractureIdentifier();
+    /// Get fracture material Identifier
+    int & GetFractureMaterialId();
     
     /// Get node pivots
     std::vector<TPZGeoElSide> & GetPivotIndexes();
@@ -89,10 +100,10 @@ public:
     std::vector<int64_t> & GetFractureIndexes();
     
     /// Get geometric indexes for left
-    std::vector<int64_t> & GetLeftIndexes();
+    std::set<int64_t> & GetLeftIndexes();
     
     /// Get geometric indexes for right
-    std::vector<int64_t> & GetRightIndexes();
+    std::set<int64_t> & GetRightIndexes();
     
 };
 

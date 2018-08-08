@@ -182,7 +182,9 @@ void MonofasicoElastico::Run(int pOrder)
     //Gerando malha geométrica:
     
     TPZGeoMesh *gmesh = CreateGMesh(); //Função para criar a malha geometrica
-    
+    int n_div = 1;
+    UniformRef(gmesh,n_div);
+            
 #ifdef PZDEBUG
     std::ofstream fileg("MalhaGeo.txt"); //Impressão da malha geométrica (formato txt)
     std::ofstream filegvtk("MalhaGeo.vtk"); //Impressão da malha geométrica (formato vtk)
@@ -337,6 +339,16 @@ void MonofasicoElastico::Run(int pOrder)
     
 }
 
+void MonofasicoElastico::UniformRef(TPZGeoMesh * gmesh, int n_div){
+    for ( int ref = 0; ref < n_div; ref++ ){
+        TPZVec<TPZGeoEl *> filhos;
+        int n = gmesh->NElements();
+        for ( int i = 0; i < n; i++ ){
+            TPZGeoEl * gel = gmesh->Element(i);
+            gel->Divide (filhos);
+        }//for i
+    }//ref
+}
 
 MonofasicoElastico::~MonofasicoElastico()
 {
@@ -929,7 +941,6 @@ void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int
 {
     for (unsigned int i_f = 0; i_f <  fracture_ids.size(); i_f++) {
         TPZFractureNeighborData fracture(cmesh.Reference(),fracture_ids[i_f]);
-        int aka = 0;
     }
 }
 
