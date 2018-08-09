@@ -76,7 +76,7 @@ MonofasicoElastico::MonofasicoElastico()
     fmatBCleft=5;
     
     //Número de fraturas do problema:
-    fnFrac = 14;
+    fnFrac = 2;
     
     fmatFrac.resize(fnFrac);
     fmatPointLeft.resize(fnFrac);
@@ -191,7 +191,7 @@ void MonofasicoElastico::Run(int pOrder)
     //Gerando malha geométrica:
     
     TPZGeoMesh *gmesh = CreateGMesh(); //Função para criar a malha geometrica
-    int n_div = 1;
+    int n_div = 0;
     UniformRef(gmesh,n_div);
             
 #ifdef PZDEBUG
@@ -958,7 +958,7 @@ void MonofasicoElastico::BreakConnectivity(TPZCompMesh &cmesh, int matId)
 
 void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids)
 {
-    for (unsigned int i_f = 0; i_f <  fracture_ids.size(); i_f++) {
+    for (unsigned int i_f = 1; i_f <  fracture_ids.size(); i_f++) {
         TPZFractureNeighborData fracture(cmesh.Reference(),fracture_ids[i_f]);
     }
 }

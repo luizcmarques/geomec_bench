@@ -79,15 +79,20 @@ void TPZFractureNeighborData::BuildFractureElements(){
         if(gel->MaterialId() != m_fracture_id || gel->Dimension()!=m_geometry->Dimension()-1 || gel->HasSubElement() == 1){
             continue;
         }
+        
+//        std::cout << "gel->HasSubElement() = " << gel->HasSubElement() << std::endl;
         m_fracture_indexes.push_back(gel->Index());
     }
     
+    if(m_fracture_indexes.size() == 0){
+        std::cout << "No fracture elements with id = " << m_fracture_id << "  were detected." << std::endl;
+        DebugStop();
+    }
     
 }
 
 void TPZFractureNeighborData::BuildPivotDataStructure(){
     
-    int64_t n_gel = m_geometry->NElements();
     for (auto ifrac : m_fracture_indexes) {
         
         // Filtering elements by fracture material identifier
@@ -120,11 +125,37 @@ void TPZFractureNeighborData::BuildPivotDataStructure(){
                 }
                 
                 if (gel_neighbor->Dimension() == m_geometry->Dimension()-2) {
-                    has_point_neighbor_Q = true;
+                    
+                    TPZStack<TPZGeoElSide> gel_sides;
+                    TPZGeoElSide gel_corner_side(gel_neighbor,gel_neighbor->NSides()-1);
+                    gel_corner_side.AllNeighbours(gel_sides);
+                    unsigned int fracture_counter = 0;
+                    for (auto gel_side: gel_sides) {
+                        
+                        if (gel_side.Element()->HasSubElement() == 1) {
+                            continue;
+                        }
+                        if (gel_side.Element()->Dimension() != m_geometry->Dimension() - 1) {
+                            continue;
+                        }
+                        
+                        if(gel_side.Element()->MaterialId() == m_fracture_id){
+                            fracture_counter++;
+                        }
+                    }
+                    
+                    if (fracture_counter == 1) {
+                        has_point_neighbor_Q = true;
+                    }
+
+//                    has_point_neighbor_Q = true;
                 }
                 
             }
+            
+            
             bool is_non_pivot_Q = (d_minus_one_neighbors_counter == 0 && has_point_neighbor_Q);
+            
             if (is_non_pivot_Q) {
                 bool is_already_inserted_Q = HasInsertedNonPivot(gel_corner_side);
                 if (!is_already_inserted_Q) {
@@ -137,6 +168,11 @@ void TPZFractureNeighborData::BuildPivotDataStructure(){
                 }
             }
         }
+    }
+    
+    if(m_pivot_indexes.size() == 0){
+        std::cout << "No pivots were detected." << std::endl;
+        DebugStop();
     }
     
 }

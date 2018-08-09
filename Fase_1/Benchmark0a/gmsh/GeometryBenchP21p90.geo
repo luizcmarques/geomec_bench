@@ -288,8 +288,12 @@ pr = 1;
   Physical Point("P31") = {31};
   Physical Point("P32") = {32};
 
-  Physical Line("f15") = {15+fshift+100,15+fshift+101};      
+  Physical Line("f15") = {15+fshift+100};      
   Physical Point("P33") = {33};
+  Physical Point("P100") = {100};
+
+  Physical Line("f15b") = {15+fshift+101};      
+  Physical Point("P100a") = {100};
   Physical Point("P34") = {34};
 
   Physical Line("f16") = {16+fshift};
@@ -312,8 +316,12 @@ pr = 1;
   Physical Point("P43") = {43};
   Physical Point("P44") = {44};
 
-  Physical Line("f21") = {21+fshift+102,21+fshift+103};
+  Physical Line("f21") = {21+fshift+102};
   Physical Point("P45") = {45};
+  Physical Point("P100b") = {100};
+
+  Physical Line("f21b") = {21+fshift+103};
+  Physical Point("P100c") = {100};
   Physical Point("P46") = {46};
 
   Physical Line("f22") = {22+fshift};      
