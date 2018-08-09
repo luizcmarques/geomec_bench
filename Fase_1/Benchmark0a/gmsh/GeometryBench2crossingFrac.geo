@@ -6,7 +6,7 @@ IsquadQ = 0;
 Mesh.ElementOrder = 1;
 Mesh.SecondOrderLinear = 0;
 
-// Definição de parâmtros
+// Parameters definitions
 
 a = 5; 
 b = 5;
@@ -20,40 +20,50 @@ ny = 4;
 n_f[] = {20,4};
 pr = 1.0;
 
-// Coordenadas dos pontos
+  // Points
 
-  //Domínio Omega
+  //Omega
   p1 = newp; Point(p1) = {0, 0, 0};
   p2 = newp; Point(p2) = {L, 0, 0};
   p3 = newp; Point(p3) = {L, h, 0};
   p4 = newp; Point(p4) = {0, h, 0};
 
-  //Fratura 0 
+  //Points for fracture 1
   p5 = newp; Point(p5) = {0, a, 0};
   p6 = newp; Point(p6) = {150, b, 0};  
 
-  //Fratura 1 
+  //Points for fracture 2
   p7 = newp; Point(p7) = {145, 7, 0};
   p8 = newp; Point(p8) = {155, 3, 0}; 
 
-// Fronteiras
-
-  //Domínio Omega  
+  // Boundaries
   l1 = newl; Line(l1) = {p1, p2};
   l2 = newl; Line(l2) = {p2, p3};
   l3 = newl; Line(l3) = {p3, p4};
   l4 = newl; Line(l4) = {p4, p5};  
   l5 = newl; Line(l5) = {p5, p1};  
 
-  //Fratura
+  // Frature 1
   f1 = newl; Line(f1) = {p5, p6};
+
+  // Frature 2
   f2 = newl; Line(f2) = {p7, p8};
-  //f3 = newl; Line(f3) = {p6, p8};
 
-  //BooleanFragments{ Line{f1}; }{ Line{f2}; }
-  //intersection[] = BooleanIntersection { Line{f2}; }{ Line{f1};};
-  //Printf("intersection created lines ", intersection[]);
+  // f1 -> f2
+  binary_fracture_intersection[] = BooleanFragments{ Line{f1}; }{ Line{f2}; }; 
+  Printf("Intersection created the lines ", binary_fracture_intersection[]);
 
+  n_lines = #binary_fracture_intersection[];
+  If(n_lines==2)
+    Printf("No intersection with provided lines ",{f1,f2});
+    f1[] = {binary_fracture_intersection[0]};
+    f2[] = {binary_fracture_intersection[1]};
+  Else
+    f1[] = {binary_fracture_intersection[0],binary_fracture_intersection[1]};
+    f2[] = {binary_fracture_intersection[2],binary_fracture_intersection[3]};
+  EndIf  
+
+  // Refinements
 
   Transfinite Line{l1,l3} = nx Using Progression pr;
   Transfinite Line{l2,l4} = ny Using Progression pr;
