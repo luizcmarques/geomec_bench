@@ -62,7 +62,6 @@ using namespace std;
 const REAL Pi=M_PI;
 REAL ftimeatual = 0.;
 
-
 MonofasicoElastico::MonofasicoElastico()
 {
     
@@ -75,13 +74,23 @@ MonofasicoElastico::MonofasicoElastico()
     fmatBCtop=3;
     fmatBCright=4;
     fmatBCleft=5;
-    fmatFrac=6;
-    fmatPointLeft = 7;
-    fmatPointRight = 8;
+    
+    //Número de fraturas do problema:
+    fnFrac = 14;
+    
+    fmatFrac.resize(fnFrac);
+    fmatPointLeft.resize(fnFrac);
+    fmatPointRight.resize(fnFrac);
+    
+    for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
+        fmatFrac[i_frac] = 6+3*i_frac;
+        fmatPointLeft[i_frac] = 7+3*i_frac;
+        fmatPointRight[i_frac] = 8+3*i_frac;
+    }
     
     //Material do elemento de interface
-    fmatInterface=17;
-    fmatFluxWrap=21;
+    fmatInterface=117;
+    fmatFluxWrap=121;
     
     //Materiais das condições de contorno (elementos de interface)
     fmatIntBCbott=-11;
@@ -208,7 +217,11 @@ void MonofasicoElastico::Run(int pOrder)
     }
     
     std::vector<int> fracture_ids;
-    fracture_ids.push_back(fmatFrac);
+            
+    for (int i_frac=0; i_frac<fnFrac; i_frac++) {
+        fracture_ids.push_back(fmatFrac[i_frac]);
+    }
+            
     BreakH1Connectivity(*cmesh_E, fracture_ids); // Insert new connects to represent normal fluxes
     TPZPoroElasticMF2d *mymaterial;
     
@@ -457,7 +470,7 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench0b.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench2crossingFrac.msh";
     
     TPZGmshReader Geometry;
     REAL s = 1.0;
@@ -541,9 +554,11 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     
     material = new TPZElasticityMaterial(fmatID, fEyoung, fpoisson, ffx, ffy, planestress);
     cmesh->InsertMaterialObject(material);
-    
-    TPZMat1dLin *materialFrac = new TPZMat1dLin(fmatFrac);
-    cmesh->InsertMaterialObject(materialFrac);
+    TPZMat1dLin *materialFrac;
+    for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
+        materialFrac = new TPZMat1dLin(fmatFrac[i_frac]);
+        cmesh->InsertMaterialObject(materialFrac);
+    }
     
     ///Inserir condicao de contorno
     TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
@@ -557,14 +572,15 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     cmesh->InsertMaterialObject(BCond3);
     cmesh->InsertMaterialObject(BCond4);
     
-    //Mat Frac:
-    
-    TPZMaterial * bc_frac_right = materialFrac->CreateBC(materialFrac, fmatPointRight , fdirichlet, val1, val2); //Cria material que implementa a condicao de contorno direita
-    cmesh->InsertMaterialObject(bc_frac_right); //Insere material na malha
-    TPZMaterial * bc_frac_left = materialFrac->CreateBC(materialFrac, fmatPointLeft , fdirichlet, val1, val2); //Cria material que implementa a condicao de contorno esquerda
-    cmesh->InsertMaterialObject(bc_frac_left); //Insere material na malha
+    for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
+        //Mat Frac:
+        TPZMaterial * bc_frac_right = materialFrac->CreateBC(materialFrac, fmatPointRight[i_frac] , fdirichlet, val1, val2);
+        cmesh->InsertMaterialObject(bc_frac_right);
+        TPZMaterial * bc_frac_left = materialFrac->CreateBC(materialFrac, fmatPointLeft[i_frac] , fdirichlet, val1, val2);
+        cmesh->InsertMaterialObject(bc_frac_left);
+    }
+
     //Criando material para FluxWrap
-    
     TPZBndCond * bc_fracture_wrap;
     bc_fracture_wrap = material->CreateBC(material,fmatFluxWrap,fdirichlet,val1,val2);
     cmesh->InsertMaterialObject(bc_fracture_wrap);
@@ -592,9 +608,12 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     cmesh->AutoBuild(matids);
     gmesh->ResetReference();
     matids.clear();
-    matids.insert(fmatFrac);
-    matids.insert(fmatPointLeft);
-    matids.insert(fmatPointRight);
+    
+    for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
+        matids.insert(fmatFrac[i_frac]);
+        matids.insert(fmatPointLeft[i_frac]);
+        matids.insert(fmatPointRight[i_frac]);
+    }
     
     if (insert_fractures_Q) {
         cmesh->SetDimModel(fdimFrac);
@@ -796,7 +815,7 @@ void MonofasicoElastico::Plot_over_fractures(TPZCompMesh *cmesh){
         if (!gel) {
             DebugStop();
         }
-        if (gel->MaterialId()!=fmatFrac) {
+        if (gel->MaterialId()!=fmatFrac[0]) {
             continue;
         }
         frac_indexes.Push(cel->Index());
@@ -950,7 +969,7 @@ void MonofasicoElastico::AddMultiphysicsInterfaces(TPZCompMesh &cmesh)
     
     TPZGeoMesh *gmesh = cmesh.Reference();
     std::set<int> velmatid;
-    velmatid.insert(fmatFrac);
+    velmatid.insert(fmatFrac[0]);
     
     
     int64_t nel = gmesh->NElements();

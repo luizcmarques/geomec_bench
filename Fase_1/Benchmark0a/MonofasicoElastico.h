@@ -64,9 +64,14 @@ private:
     int fmatBCtop;
     int fmatBCleft;
     int fmatBCright;
-    int fmatFrac;
-    int fmatPointLeft;
-    int fmatPointRight;
+    vector<int> fmatFrac;
+    vector<int> fmatPointLeft;
+    vector<int> fmatPointRight;
+    int fnFrac;
+    
+    //int fmatFrac;
+    //int fmatPointLeft;
+    //int fmatPointRight;
     
     //Material do elemento de interface
     int fmatInterface;
@@ -118,7 +123,7 @@ private:
 public:
 
     MonofasicoElastico();
-
+    
     void Run(int pOrder);
     
     ~MonofasicoElastico();
