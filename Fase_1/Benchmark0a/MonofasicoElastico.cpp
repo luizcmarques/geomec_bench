@@ -76,7 +76,7 @@ MonofasicoElastico::MonofasicoElastico()
     fmatBCleft=5;
     
     //Número de fraturas do problema:
-    fnFrac = 2;
+    fnFrac = 25;
     
     fmatFrac.resize(fnFrac);
     fmatPointLeft.resize(fnFrac);
@@ -469,7 +469,7 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench2crossingFrac.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBenchP21p90.msh";
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
