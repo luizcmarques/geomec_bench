@@ -22,6 +22,8 @@ private:
     
     TPZGeoMesh * m_geometry;
     
+    std::set<int> m_boundaries_material_ids;
+    
     std::vector<TPZGeoElSide> m_pivot_indexes;
     
     std::vector<TPZGeoElSide> m_non_pivot_indexes;
@@ -82,7 +84,7 @@ public:
     TPZFractureNeighborData(TPZFractureNeighborData & other);
     
     /// Constructor based on a computational mesh and fracture material id
-    TPZFractureNeighborData(TPZGeoMesh * geometry, int fracture_id);
+    TPZFractureNeighborData(TPZGeoMesh * geometry, int fracture_id, std::set<int> & boundaries_ids);
 
     /// Set fracture Identifier
     void SetFractureIdentifier(int fracture_id);

@@ -189,7 +189,6 @@ void MonofasicoElastico::Run(int pOrder)
 
     
     //Gerando malha geométrica:
-    
     TPZGeoMesh *gmesh = CreateGMesh(); //Função para criar a malha geometrica
     int n_div = 0;
     UniformRef(gmesh,n_div);
@@ -471,7 +470,7 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
     std::string grid;
     
     grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench2crossingFrac.msh";
-    
+
     TPZGmshReader Geometry;
     REAL s = 1.0;
     Geometry.SetfDimensionlessL(s);
@@ -958,8 +957,14 @@ void MonofasicoElastico::BreakConnectivity(TPZCompMesh &cmesh, int matId)
 
 void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids)
 {
-    for (unsigned int i_f = 1; i_f <  fracture_ids.size(); i_f++) {
-        TPZFractureNeighborData fracture(cmesh.Reference(),fracture_ids[i_f]);
+    std::set<int> boundaries_ids;
+    boundaries_ids.insert(fmatBCbott);
+    boundaries_ids.insert(fmatBCleft);
+    boundaries_ids.insert(fmatBCtop);
+    boundaries_ids.insert(fmatBCright);
+    
+    for (unsigned int i_f = 0; i_f <  fracture_ids.size(); i_f++) {
+        TPZFractureNeighborData fracture(cmesh.Reference(),fracture_ids[i_f],boundaries_ids);
     }
 }
 

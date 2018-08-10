@@ -90,42 +90,41 @@ pr = 1;
   Line(8) = {30, 43};
   Line(9) = {43, 9};
   Line(10) = {9, 17};
-  Line(11) = {17, 17};
-  Line(12) = {17, 11};
-  Line(13) = {11, 31};
-  Line(14) = {31, 47};
-  Line(15) = {47, 7};
-  Line(16) = {7, 50};
-  Line(17) = {50, 27};
-  Line(18) = {27, 41};
-  Line(19) = {41, 45};
-  Line(20) = {45, 33};
-  Line(21) = {33, 13};
-  Line(22) = {13, 2};
-  Line(23) = {2, 25};
-  Line(24) = {25, 3};
-  Line(25) = {3, 26};
-  Line(26) = {26, 46};
-  Line(27) = {46, 34};
-  Line(28) = {34, 28};
-  Line(29) = {28, 8};
-  Line(30) = {8, 32};
-  Line(31) = {32, 12};
-  Line(32) = {12, 18};
-  Line(33) = {18, 10};
-  Line(34) = {10, 29};
-  Line(35) = {29, 36};
-  Line(36) = {36, 24};
-  Line(37) = {24, 6};
-  Line(38) = {6, 38};
-  Line(39) = {38, 4};
-  Line(40) = {4, 40};
-  Line(41) = {40, 22};
-  Line(42) = {22, 1};
+  Line(11) = {17, 11};
+  Line(12) = {11, 31};
+  Line(13) = {31, 47};
+  Line(14) = {47, 7};
+  Line(15) = {7, 50};
+  Line(16) = {50, 27};
+  Line(17) = {27, 41};
+  Line(18) = {41, 45};
+  Line(19) = {45, 33};
+  Line(20) = {33, 13};
+  Line(21) = {13, 2};
+  Line(22) = {2, 25};
+  Line(23) = {25, 3};
+  Line(24) = {3, 26};
+  Line(25) = {26, 46};
+  Line(26) = {46, 34};
+  Line(27) = {34, 28};
+  Line(28) = {28, 8};
+  Line(29) = {8, 32};
+  Line(30) = {32, 12};
+  Line(31) = {12, 18};
+  Line(32) = {18, 10};
+  Line(33) = {10, 29};
+  Line(34) = {29, 36};
+  Line(35) = {36, 24};
+  Line(36) = {24, 6};
+  Line(37) = {6, 38};
+  Line(38) = {38, 4};
+  Line(39) = {4, 40};
+  Line(40) = {40, 22};
+  Line(41) = {22, 1};
 
 //Fratura
 
-  fshift = 42;
+  fshift = 41;
 
   Line(1+fshift) = {1+dshift,2+dshift};
   Line(2+fshift) = {3+dshift,4+dshift};
@@ -157,8 +156,8 @@ pr = 1;
   Line(22+fshift) = {43+dshift,44+dshift};
   Line(23+fshift) = {45+dshift,46+dshift};  
 
-  Transfinite Line{4,5,14,22,24,26,36,37} = nx Using Progression pr;
-  Transfinite Line{1,2,3,6,7,8,9,10,11,12,13,15,16,17,18,19,20,21,23,25,27,28,29,30,31,32,33,34,35,38,39,40,41,42} = ny Using Progression pr;
+  Transfinite Line{4,5,13,21,23,25,35,36} = nx Using Progression pr;
+  Transfinite Line{1,2,3,6,7,8,9,10,11,12,14,15,16,17,18,19,20,22,24,26,27,28,29,30,31,32,33,34,37,38,39,40,41} = ny Using Progression pr;
 
   Transfinite Line{1+fshift} = ny Using Progression pr;
   Transfinite Line{2+fshift} = ny Using Progression pr;
@@ -189,7 +188,7 @@ pr = 1;
 
 // Definição da superfície 
 
-  Line Loop(1) = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42};
+  Line Loop(1) = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41};
   Plane Surface(1) = {1};
 
   Line{1+fshift} In Surface{1};
@@ -227,10 +226,10 @@ pr = 1;
   EndIf
 
   Physical Surface("Omega") = {1};
-  Physical Line("bottom") = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22};
-  Physical Line("top") = {23,2};
-  Physical Line("right") = {23,24};
-  Physical Line("left") = {54};
+  Physical Line("bottom") = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21};
+  Physical Line("top") = {25,26,27,28,29,30,31,32,33,34,35,36,37,38};
+  Physical Line("right") = {22,23};
+  Physical Line("left") = {39,40,41};
   
   Physical Line("f1") = {1+fshift};
   Physical Point("P5") = {5};

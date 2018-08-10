@@ -19,12 +19,13 @@ TPZFractureNeighborData::~TPZFractureNeighborData(){
 
 /// Copy constructor
 TPZFractureNeighborData::TPZFractureNeighborData(TPZFractureNeighborData & other){
-    m_fracture_id           = other.m_fracture_id;
-    m_geometry              = other.m_geometry;
-    m_pivot_indexes         = other.m_pivot_indexes;
-    m_non_pivot_indexes     = other.m_non_pivot_indexes;
-    m_gel_left_indexes      = other.m_gel_left_indexes;
-    m_gel_right_indexes     = other.m_gel_right_indexes;
+    m_fracture_id               = other.m_fracture_id;
+    m_geometry                  = other.m_geometry;
+    m_boundaries_material_ids   = other.m_boundaries_material_ids;
+    m_pivot_indexes             = other.m_pivot_indexes;
+    m_non_pivot_indexes         = other.m_non_pivot_indexes;
+    m_gel_left_indexes          = other.m_gel_left_indexes;
+    m_gel_right_indexes         = other.m_gel_right_indexes;
 }
 
 /// Set fracture Identifier
@@ -63,9 +64,10 @@ std::set<int64_t> & TPZFractureNeighborData::GetRightIndexes(){
 }
 
 /// Constructor based on a computational mesh and fracture material id
-TPZFractureNeighborData::TPZFractureNeighborData(TPZGeoMesh * geometry, int fracture_id){
+TPZFractureNeighborData::TPZFractureNeighborData(TPZGeoMesh * geometry, int fracture_id, std::set<int> & boundaries_ids){
     m_geometry = geometry;
     m_fracture_id = fracture_id;
+    m_boundaries_material_ids = boundaries_ids;
     ClassifyNeighboursofPivots();
 }
 
@@ -104,7 +106,9 @@ void TPZFractureNeighborData::BuildPivotDataStructure(){
             TPZGeoElSide gel_corner_side(gel,i_side);
             gel_corner_side.AllNeighbours(all_neighbors);
             
-            unsigned int d_minus_one_neighbors_counter = 0;
+            unsigned int d_minus_bc_neighbors_counter = 0;
+            unsigned int d_minus_other_fracture_neighbors_counter = 0;
+            unsigned int d_minus_same_fracture_neighbors_counter = 0;
             
             bool has_point_neighbor_Q = false;
             unsigned int n_neighbors = all_neighbors.size();
@@ -121,50 +125,64 @@ void TPZFractureNeighborData::BuildPivotDataStructure(){
                 }
                 
                 if (gel_neighbor->Dimension() == m_geometry->Dimension()-1) {
-                    d_minus_one_neighbors_counter++;
+                    int material_id = gel_neighbor->MaterialId();
+                    bool is_boundary_memeber_Q = m_boundaries_material_ids.find(material_id) != m_boundaries_material_ids.end();
+                    if (is_boundary_memeber_Q) {
+                        d_minus_bc_neighbors_counter++;
+                    }else{
+                        if (material_id == m_fracture_id) {
+                            d_minus_same_fracture_neighbors_counter++;
+                        }else{
+                            d_minus_other_fracture_neighbors_counter++;
+                        }
+                        
+                    }
                 }
                 
                 if (gel_neighbor->Dimension() == m_geometry->Dimension()-2) {
                     
-                    TPZStack<TPZGeoElSide> gel_sides;
-                    TPZGeoElSide gel_corner_side(gel_neighbor,gel_neighbor->NSides()-1);
-                    gel_corner_side.AllNeighbours(gel_sides);
-                    unsigned int fracture_counter = 0;
-                    for (auto gel_side: gel_sides) {
-                        
-                        if (gel_side.Element()->HasSubElement() == 1) {
-                            continue;
-                        }
-                        if (gel_side.Element()->Dimension() != m_geometry->Dimension() - 1) {
-                            continue;
-                        }
-                        
-                        if(gel_side.Element()->MaterialId() == m_fracture_id){
-                            fracture_counter++;
-                        }
-                    }
-                    
-                    if (fracture_counter == 1) {
-                        has_point_neighbor_Q = true;
-                    }
+//                    TPZStack<TPZGeoElSide> gel_sides;
+//                    TPZGeoElSide gel_corner_side(gel_neighbor,gel_neighbor->NSides()-1);
+//                    gel_corner_side.AllNeighbours(gel_sides);
+//                    unsigned int fracture_counter = 0;
+//                    for (auto gel_side: gel_sides) {
+//
+//                        if (gel_side.Element()->HasSubElement() == 1) {
+//                            continue;
+//                        }
+//                        if (gel_side.Element()->Dimension() != m_geometry->Dimension() - 1) {
+//                            continue;
+//                        }
+//
+//                        if(gel_side.Element()->MaterialId() == m_fracture_id){
+//                            fracture_counter++;
+//                        }
+//                    }
+//
+//                    if (fracture_counter == 1) {
+//                        has_point_neighbor_Q = true;
+//                    }
 
-//                    has_point_neighbor_Q = true;
+                    has_point_neighbor_Q = true;
                 }
                 
             }
             
+            bool is_boundary_neighbour_Q = (d_minus_bc_neighbors_counter != 0 && has_point_neighbor_Q);
+            bool is_the_end_of_fractrue_Q = d_minus_same_fracture_neighbors_counter == 0 && has_point_neighbor_Q;
+            bool is_internal_side_Q = !is_the_end_of_fractrue_Q;
             
-            bool is_non_pivot_Q = (d_minus_one_neighbors_counter == 0 && has_point_neighbor_Q);
+            bool is_pivot_Q = (is_boundary_neighbour_Q && is_the_end_of_fractrue_Q) || is_internal_side_Q;
             
-            if (is_non_pivot_Q) {
-                bool is_already_inserted_Q = HasInsertedNonPivot(gel_corner_side);
-                if (!is_already_inserted_Q) {
-                    m_non_pivot_indexes.push_back(gel_corner_side);
-                }
-            }else{
+            if (is_pivot_Q) {
                 bool is_already_inserted_Q = HasInsertedPivot(gel_corner_side);
                 if (!is_already_inserted_Q) {
                     m_pivot_indexes.push_back(gel_corner_side);
+                }
+            }else{
+                bool is_already_inserted_Q = HasInsertedNonPivot(gel_corner_side);
+                if (!is_already_inserted_Q) {
+                    m_non_pivot_indexes.push_back(gel_corner_side);
                 }
             }
         }
