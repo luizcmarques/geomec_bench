@@ -190,7 +190,7 @@ void MonofasicoElastico::Run(int pOrder)
     
     //Gerando malha geométrica:
     TPZGeoMesh *gmesh = CreateGMesh(); //Função para criar a malha geometrica
-    int n_div = 0;
+    int n_div = 1;
     UniformRef(gmesh,n_div);
             
 #ifdef PZDEBUG

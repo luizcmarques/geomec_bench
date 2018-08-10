@@ -107,7 +107,6 @@ void TPZFractureNeighborData::BuildPivotDataStructure(){
             gel_corner_side.AllNeighbours(all_neighbors);
             
             unsigned int d_minus_bc_neighbors_counter = 0;
-            unsigned int d_minus_other_fracture_neighbors_counter = 0;
             unsigned int d_minus_same_fracture_neighbors_counter = 0;
             
             bool has_point_neighbor_Q = false;
@@ -132,36 +131,12 @@ void TPZFractureNeighborData::BuildPivotDataStructure(){
                     }else{
                         if (material_id == m_fracture_id) {
                             d_minus_same_fracture_neighbors_counter++;
-                        }else{
-                            d_minus_other_fracture_neighbors_counter++;
                         }
-                        
                     }
                 }
                 
                 if (gel_neighbor->Dimension() == m_geometry->Dimension()-2) {
                     
-//                    TPZStack<TPZGeoElSide> gel_sides;
-//                    TPZGeoElSide gel_corner_side(gel_neighbor,gel_neighbor->NSides()-1);
-//                    gel_corner_side.AllNeighbours(gel_sides);
-//                    unsigned int fracture_counter = 0;
-//                    for (auto gel_side: gel_sides) {
-//
-//                        if (gel_side.Element()->HasSubElement() == 1) {
-//                            continue;
-//                        }
-//                        if (gel_side.Element()->Dimension() != m_geometry->Dimension() - 1) {
-//                            continue;
-//                        }
-//
-//                        if(gel_side.Element()->MaterialId() == m_fracture_id){
-//                            fracture_counter++;
-//                        }
-//                    }
-//
-//                    if (fracture_counter == 1) {
-//                        has_point_neighbor_Q = true;
-//                    }
 
                     has_point_neighbor_Q = true;
                 }
@@ -325,7 +300,7 @@ bool TPZFractureNeighborData::HasLeftIndexNeighbour(int64_t gel_index){
     unsigned int gel_candidate_side = gel->NSides() - 1;
     
     if (gel->HasSubElement() == 1) {
-        return false;
+        return true;
     }
     
     if (m_gel_left_indexes.find(gel_index) != m_gel_left_indexes.end()) {
@@ -359,7 +334,7 @@ bool TPZFractureNeighborData::HasRightIndexNeighbour(int64_t gel_index){
     unsigned int gel_candidate_side = gel->NSides() - 1;
     
     if (gel->HasSubElement() == 1) {
-        return false;
+        return true;
     }
     
     if (m_gel_right_indexes.find(gel_index) != m_gel_right_indexes.end()) {
