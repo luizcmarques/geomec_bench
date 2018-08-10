@@ -4,7 +4,7 @@ SetFactory("OpenCASCADE");
 
 Include "macros/IntersectLines.geo";
 
-IsquadQ = 0;
+IsquadQ = 1;
  
 Mesh.ElementOrder = 1;
 Mesh.SecondOrderLinear = 0;
@@ -18,9 +18,9 @@ L = 200;
 Lf = 200;
 
 n_bc = 2;
-nx = 20;
+nx = 40;
 ny = 4;
-n_f[] = {20,4};
+n_f[] = {100,4};
 pr = 1.0;
 
   // Points
@@ -95,7 +95,7 @@ pr = 1.0;
 
   // Refinements
   Transfinite Line{l1,l3} = nx Using Progression pr;
-  Transfinite Line{l2,l4} = ny Using Progression pr;
+  Transfinite Line{l2,l4,l5} = ny Using Progression pr;
 
 
   Transfinite Line{f1[]} = n_f[0] Using Progression pr;
