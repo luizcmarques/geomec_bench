@@ -6,6 +6,8 @@
 //
 
 #include "TPZFractureNeighborData.h"
+#include "pzinterpolationspace.h"
+#include "pzintel.h"
 
 /// Default constructor
 TPZFractureNeighborData::TPZFractureNeighborData(){
@@ -438,4 +440,87 @@ void TPZFractureNeighborData::ClassifyNeighboursofPivots(){
     TPZVTKGeoMesh::PrintGMeshVTK(m_geometry, filegvtk,true);
     
 }
+
+/// Open the connects of a fracture, create dim-1 fracture elements
+void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
+    
+    TPZGeoMesh *gmesh = cmesh->Reference();
+    gmesh->ResetReference();
+    cmesh->LoadReferences();
+    std::map<int64_t,int64_t> connectmap;
+    std::set<int64_t> geonodes;
+    for (auto gelside : m_pivot_indexes) {
+        geonodes.insert(gelside.SideNodeIndex(0));
+    }
+    for (auto ifrac : m_fracture_indexes) {
+        
+        // Filtering elements by fracture material identifier
+        TPZGeoEl *gel = m_geometry->Element(ifrac);
+        
+        unsigned int n_corner_sides = gel->NSides();
+        for (unsigned int i_side = 0; i_side < n_corner_sides; i_side++) {
+            
+            int64_t nodeindex = gel->NodeIndex(i_side);
+            if (i_side < gel->NCornerNodes() && geonodes.find(nodeindex) == geonodes.end()) {
+                continue;
+            }
+            TPZStack<TPZGeoElSide> all_neighbors;
+            TPZGeoElSide gel_corner_side(gel,i_side);
+            gel_corner_side.AllNeighbours(all_neighbors);
+            unsigned int n_neighbors = all_neighbors.size();
+            for (unsigned int i_neighbor = 0; i_neighbor < n_neighbors; i_neighbor++) {
+                TPZGeoEl * gel_neighbor = all_neighbors[i_neighbor].Element();
+                TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement *>(gel_neighbor->Reference());
+                if(!intel) continue;
+                int64_t conindex = intel->ConnectIndex(all_neighbors[i_neighbor].Side());
+                connectmap[conindex] = -1;
+            }
+        
+        }
+    }
+    for (auto indexpair :connectmap) {
+        int64_t conindex = indexpair.first;
+        TPZConnect &cnew (cmesh->ConnectVec()[conindex]);
+        int64_t newindex = cmesh->AllocateNewConnect(cnew);
+        connectmap[conindex] = newindex;
+    }
+    
+    for (auto ifrac : m_fracture_indexes) {
+        
+        // Filtering elements by fracture material identifier
+        TPZGeoEl *gel = m_geometry->Element(ifrac);
+        
+        unsigned int n_corner_sides = gel->NSides();
+        for (unsigned int i_side = 0; i_side < n_corner_sides; i_side++) {
+            
+            int64_t nodeindex = gel->NodeIndex(i_side);
+            if (i_side < gel->NCornerNodes() && geonodes.find(nodeindex) == geonodes.end()) {
+                continue;
+            }
+            TPZStack<TPZGeoElSide> all_neighbors;
+            TPZGeoElSide gel_corner_side(gel,i_side);
+            gel_corner_side.AllNeighbours(all_neighbors);
+            unsigned int n_neighbors = all_neighbors.size();
+            for (unsigned int i_neighbor = 0; i_neighbor < n_neighbors; i_neighbor++) {
+                TPZGeoEl * gel_neighbor = all_neighbors[i_neighbor].Element();
+                int64_t gelindex = gel_neighbor->Index();
+                if(m_gel_left_indexes.find(gelindex) == m_gel_left_indexes.end())
+                {
+                    continue;
+                }
+                TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement *>(gel_neighbor->Reference());
+                if(!intel) continue;
+                int64_t conindex = intel->ConnectIndex(all_neighbors[i_neighbor].Side());
+                int64_t newindex = connectmap[conindex];
+                intel->SetConnectIndex(all_neighbors[i_neighbor].Side(), newindex);
+            }            
+        }
+    }
+
+}
+    
+
+    
+
+
 

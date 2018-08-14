@@ -92,6 +92,9 @@ public:
     /// Get fracture material Identifier
     int & GetFractureMaterialId();
     
+    /// Open the connects of a fracture, create dim-1 fracture elements
+    void OpenFracture(TPZCompMesh *cmesh);
+    
     /// Get node pivots
     std::vector<TPZGeoElSide> & GetPivotIndexes();
 
@@ -101,10 +104,10 @@ public:
     /// Get geometric fracture indexes
     std::vector<int64_t> & GetFractureIndexes();
     
-    /// Get geometric indexes for left
+    /// Get geometric element indexes for left
     std::set<int64_t> & GetLeftIndexes();
     
-    /// Get geometric indexes for right
+    /// Get geometric element indexes for right
     std::set<int64_t> & GetRightIndexes();
     
 };

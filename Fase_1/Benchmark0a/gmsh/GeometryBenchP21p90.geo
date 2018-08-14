@@ -15,207 +15,210 @@ Lf = 200;
 n_bc = 2;
 nx = 18;
 ny = 8;
+nf = 8;
+
 pr = 1;
+
 
 // Coordenadas dos pontos
 
   //Domínio Omega
-  Point(1) = {0, 0, 0, 1e+22};
-  Point(2) = {L, 0, 0, 1e+22};
-  Point(3) = {L, h, 0, 1e+22};
-  Point(4) = {0, h, 0, 1e+22};
+  p1 = newp;  Point(p1) = {0, 0, 0, 1e+22};
+  p2 = newp; Point(p2) = {L, 0, 0, 1e+22};
+  p3 = newp; Point(p3) = {L, h, 0, 1e+22};
+  p4 = newp; Point(p4) = {0, h, 0, 1e+22};
 
   //Fraturas
   
   dshift=4;
 
-  Point(1+dshift) = {16.2749023439828, 6.23486328125, 0, 1e+22};
-  Point(2+dshift) = {13.8852539060172, 10, 0, 1e+22};
-  Point(3+dshift) = {144.848144531017, 0, 0, 1e+22};
-  Point(4+dshift) = {138.623535156017, 10, 0, 1e+22};
-  Point(5+dshift) = {96.4799804689828, 0, 0, 1e+22};
-  Point(6+dshift) = {91.3334960939828, 10, 0, 1e+22};
-  Point(7+dshift) = {116.433105468983, 0, 0, 1e+22};
-  Point(8+dshift) = {111.11328125, 10, 0, 1e+22};
-  Point(9+dshift) = {175.595703125, 0, 0, 1e+22};
-  Point(10+dshift) = {173.182617187966, 4.248046875, 0, 1e+22};
-  Point(11+dshift) = {34.7060546879657, 0, 0, 1e+22};
-  Point(12+dshift) = {32.5639648439828, 2.9326171875, 0, 1e+22};
-  Point(13+dshift) = {101.584960937966, 0, 0, 1e+22};
-  Point(14+dshift) = {99.2885742189828, 10, 0, 1e+22};
-  Point(15+dshift) = {55.1469726560172, 0, 0, 1e+22};
-  Point(16+dshift) = {51.3994140629657, 6.646484375, 0, 1e+22};
-  Point(17+dshift) = {1.27636718796566, 0, 0, 1e+22};
-  Point(18+dshift) = {0, 3.6279296875, 0, 1e+22};
-  Point(19+dshift) = {45.599609375, 6.6376953125, 0, 1e+22};
-  Point(20+dshift) = {44.9741210939828, 10, 0, 1e+22};
-  Point(21+dshift) = {200, 9.69091796875, 0, 1e+22};
-  Point(22+dshift) = {199.880859375, 10, 0, 1e+22};
-  Point(23+dshift) = {153.142089843983, 0, 0, 1e+22};
-  Point(24+dshift) = {150.48828125, 10, 0, 1e+22};
-  Point(25+dshift) = {82.1235351560172, 10, 0, 1e+22};
-  Point(26+dshift) = {83.0419921879657, 0, 0, 1e+22};
-  Point(27+dshift) = {125.870117187034, 0, 0, 1e+22};
-  Point(28+dshift) = {123.298828125, 10, 0, 1e+22};
-  Point(29+dshift) = {172.943359375, 0, 0, 1e+22};
-  Point(30+dshift) = {168.052734375, 10, 0, 1e+22};
-  Point(31+dshift) = {66.0795898439828, 0, 0, 1e+22};
-  Point(32+dshift) = {64.4150390629657, 10, 0, 1e+22};
-  Point(33+dshift) = {13.9760742189828, 0, 0, 1e+22};
-  Point(34+dshift) = {10.955078125, 10, 0, 1e+22};
-  Point(35+dshift) = {4.24365234398283, 0, 0, 1e+22};
-  Point(36+dshift) = {0, 6.3251953125, 0, 1e+22};
-  Point(37+dshift) = {161.393554687966, 0, 0, 1e+22};
-  Point(38+dshift) = {160.513671875, 6.15087890625, 0, 1e+22};
-  Point(39+dshift) = {85.826171875, 0, 0, 1e+22};
-  Point(40+dshift) = {82.869140625, 9.419921875, 0, 1e+22};
-  Point(41+dshift) = {172.118652343983, 0, 0, 1e+22};
-  Point(42+dshift) = {170.742675781017, 10, 0, 1e+22};
-  Point(43+dshift) = {141.385742187034, 0, 0, 1e+22};
-  Point(44+dshift) = {137.514160156017, 7.1572265625, 0, 1e+22};
-  Point(45+dshift) = {145.985839843983, 4.21630859375, 0, 1e+22};
-  Point(46+dshift) = {145.889648437034, 0, 0, 1e+22};
+  p5 = newp; Point(p5) = {16.2749023439828, 6.23486328125, 0, 1e+22};
+  p6 = newp; Point(p6) = {13.8852539060172, 10, 0, 1e+22};
+  p7 = newp; Point(p7) = {144.848144531017, 0, 0, 1e+22};
+  p8 = newp; Point(p8) = {138.623535156017, 10, 0, 1e+22};
+  p9 = newp; Point(p9) = {96.4799804689828, 0, 0, 1e+22};
+  p10 = newp; Point(p10) = {91.3334960939828, 10, 0, 1e+22};
+  p11 = newp; Point(p11) = {116.433105468983, 0, 0, 1e+22};
+  p12 = newp; Point(p12) = {111.11328125, 10, 0, 1e+22};
+  p13 = newp; Point(p13) = {175.595703125, 0, 0, 1e+22};
+  p14 = newp; Point(p14) = {173.182617187966, 4.248046875, 0, 1e+22};
+  p15 = newp; Point(p15) = {34.7060546879657, 0, 0, 1e+22};
+  p16 = newp; Point(p16) = {32.5639648439828, 2.9326171875, 0, 1e+22};
+  p17 = newp; Point(p17) = {101.584960937966, 0, 0, 1e+22};
+  p18 = newp; Point(p18) = {99.2885742189828, 10, 0, 1e+22};
+  p19 = newp; Point(p19) = {55.1469726560172, 0, 0, 1e+22};
+  p20 = newp; Point(p20) = {51.3994140629657, 6.646484375, 0, 1e+22};
+  p21 = newp; Point(p21) = {1.27636718796566, 0, 0, 1e+22};
+  p22 = newp; Point(p22) = {0, 3.6279296875, 0, 1e+22};
+  p23 = newp; Point(p23) = {45.599609375, 6.6376953125, 0, 1e+22};
+  p24 = newp; Point(p24) = {44.9741210939828, 10, 0, 1e+22};
+  p25 = newp; Point(p25) = {200, 9.69091796875, 0, 1e+22};
+  p26 = newp; Point(p26) = {199.880859375, 10, 0, 1e+22};
+  p27 = newp; Point(p27) = {153.142089843983, 0, 0, 1e+22};
+  p28 = newp; Point(p28) = {150.48828125, 10, 0, 1e+22};
+  p29 = newp; Point(p29) = {82.1235351560172, 10, 0, 1e+22};
+  p30 = newp; Point(p30) = {83.0419921879657, 0, 0, 1e+22};
+  p31 = newp; Point(p31) = {125.870117187034, 0, 0, 1e+22};
+  p32 = newp; Point(p32) = {123.298828125, 10, 0, 1e+22};
+  p33 = newp; Point(p33) = {172.943359375, 0, 0, 1e+22};
+  p34 = newp; Point(p34) = {168.052734375, 10, 0, 1e+22};
+  p35 = newp; Point(p35) = {66.0795898439828, 0, 0, 1e+22};
+  p36 = newp; Point(p36) = {64.4150390629657, 10, 0, 1e+22};
+  p37 = newp; Point(p37) = {13.9760742189828, 0, 0, 1e+22};
+  p38 = newp; Point(p38) = {10.955078125, 10, 0, 1e+22};
+  p39 = newp; Point(p39) = {4.24365234398283, 0, 0, 1e+22};
+  p40 = newp; Point(p40) = {0, 6.3251953125, 0, 1e+22};
+  p41 = newp; Point(p41) = {161.393554687966, 0, 0, 1e+22};
+  p42 = newp; Point(p42) = {160.513671875, 6.15087890625, 0, 1e+22};
+  p43 = newp; Point(p43) = {85.826171875, 0, 0, 1e+22};
+  p44 = newp; Point(p44) = {82.869140625, 9.419921875, 0, 1e+22};
+  p45 = newp; Point(p45) = {172.118652343983, 0, 0, 1e+22};
+  p46 = newp; Point(p46) = {170.742675781017, 10, 0, 1e+22};
+  p47 = newp; Point(p47) = {141.385742187034, 0, 0, 1e+22};
+  p48 = newp; Point(p48) = {137.514160156017, 7.1572265625, 0, 1e+22};
+  p49 = newp; Point(p49) = {145.985839843983, 4.21630859375, 0, 1e+22};
+  p50 = newp; Point(p50) = {145.889648437034, 0, 0, 1e+22};
 
-  Point(100) = {171.7957815,2.346485134, 0, 1e+22};
+  p100 = newp;  Point(p100) = {171.7957815,2.346485134, 0, 1e+22};
 
 // Fronteiras - Domínio Omega  
  
-  Line(1) = {1, 21};
-  Line(2) = {21, 39};
-  Line(3) = {39, 37};
-  Line(4) = {37, 15};
-  Line(5) = {15, 19};
-  Line(6) = {19, 35};
-  Line(7) = {35, 30};
-  Line(8) = {30, 43};
-  Line(9) = {43, 9};
-  Line(10) = {9, 17};
-  Line(11) = {17, 11};
-  Line(12) = {11, 31};
-  Line(13) = {31, 47};
-  Line(14) = {47, 7};
-  Line(15) = {7, 50};
-  Line(16) = {50, 27};
-  Line(17) = {27, 41};
-  Line(18) = {41, 45};
-  Line(19) = {45, 33};
-  Line(20) = {33, 13};
-  Line(21) = {13, 2};
-  Line(22) = {2, 25};
-  Line(23) = {25, 3};
-  Line(24) = {3, 26};
-  Line(25) = {26, 46};
-  Line(26) = {46, 34};
-  Line(27) = {34, 28};
-  Line(28) = {28, 8};
-  Line(29) = {8, 32};
-  Line(30) = {32, 12};
-  Line(31) = {12, 18};
-  Line(32) = {18, 10};
-  Line(33) = {10, 29};
-  Line(34) = {29, 36};
-  Line(35) = {36, 24};
-  Line(36) = {24, 6};
-  Line(37) = {6, 38};
-  Line(38) = {38, 4};
-  Line(39) = {4, 40};
-  Line(40) = {40, 22};
-  Line(41) = {22, 1};
+  l1 = newl; Line(l1) = {p1, p21};
+  l2 = newl; Line(l2) = {p21, p39};
+  l3 = newl; Line(l3) = {p39, p37};
+  l4 = newl; Line(l4) = {p37, p15};
+  l5 = newl; Line(l5) = {p15, p19};
+  l6 = newl; Line(l6) = {p19, p35};
+  l7 = newl; Line(l7) = {p35, p30};
+  l8 = newl; Line(l8) = {p30, p43};
+  l9 = newl; Line(l9) = {p43, p9};
+  l10 = newl; Line(l10) = {p9, p17};
+  l11 = newl; Line(l11) = {p17, p11};
+  l12 = newl; Line(l12) = {p11, p31};
+  l13 = newl; Line(l13) = {p31, p47};
+  l14 = newl; Line(l14) = {p47, p7};
+  l15 = newl; Line(l15) = {p7, p50};
+  l16 = newl; Line(l16) = {p50, p27};
+  l17 = newl; Line(l17) = {p27, p41};
+  l18 = newl; Line(l18) = {p41, p45};
+  l19 = newl; Line(l19) = {p45, p33};
+  l20 = newl; Line(l20) = {p33, p13};
+  l21 = newl; Line(l21) = {p13, p2};
+  l22 = newl; Line(l22) = {p2, p25};
+  l23 = newl; Line(l23) = {p25, p3};
+  l24 = newl; Line(l24) = {p3, p26};
+  l25 = newl; Line(l25) = {p26, p46};
+  l26 = newl; Line(l26) = {p46, p34};
+  l27 = newl; Line(l27) = {p34, p28};
+  l28 = newl; Line(l28) = {p28, p8};
+  l29 = newl; Line(l29) = {p8, p32};
+  l30 = newl; Line(l30) = {p32, p12};
+  l31 = newl; Line(l31) = {p12, p18};
+  l32 = newl; Line(l32) = {p18, p10};
+  l33 = newl; Line(l33) = {p10, p29};
+  l34 = newl; Line(l34) = {p29, p36};
+  l35 = newl; Line(l35) = {p36, p24};
+  l36 = newl; Line(l36) = {p24, p6};
+  l37 = newl; Line(l37) = {p6, p38};
+  l38 = newl; Line(l38) = {p38, p4};
+  l39 = newl; Line(l39) = {p4, p40};
+  l40 = newl; Line(l40) = {p40, p22};
+  l41 = newl; Line(l41) = {p22, p1};
 
 //Fratura
 
   fshift = 41;
 
-  Line(1+fshift) = {1+dshift,2+dshift};
-  Line(2+fshift) = {3+dshift,4+dshift};
-  Line(3+fshift) = {5+dshift,6+dshift};
-  Line(4+fshift) = {7+dshift,8+dshift};
-  Line(5+fshift) = {9+dshift,10+dshift};
-  Line(6+fshift) = {11+dshift,12+dshift};
-  Line(7+fshift) = {13+dshift,14+dshift};
-  Line(8+fshift) = {15+dshift,16+dshift};
-  Line(9+fshift) = {17+dshift,18+dshift};
-  Line(10+fshift) = {19+dshift,20+dshift};
-  Line(11+fshift) = {21+dshift,22+dshift};
-  Line(12+fshift) = {23+dshift,24+dshift};
-  Line(13+fshift) = {25+dshift,26+dshift};
-  Line(14+fshift) = {27+dshift,28+dshift};
+  f1 = newl; Line(f1) = {p5,p6};
+  f2 = newl; Line(f2) = {p7,p8};
+  f3 = newl; Line(f3) = {p9,p10};
+  f4 = newl; Line(f4) = {p11,p12};
+  f5 = newl; Line(f5) = {p13,p14};
+  f6 = newl; Line(f6) = {p15,p16};
+  f7 = newl; Line(f7) = {p17,p18};
+  f8 = newl; Line(f8) = {p19,p20};
+  f9 = newl; Line(f9) = {p21,p22};
+  f10 = newl; Line(f10) = {p23,p24};
+  f11 = newl; Line(f11) = {p25,p26};
+  f12 = newl; Line(f12) = {p27,p28};
+  f13 = newl; Line(f13) = {p29,p30};
+  f14 = newl; Line(f14) = {p31,p32};
   
-  Line(15+fshift+100) = {29+dshift,100};
-  Line(15+fshift+101) = {100,30+dshift};
+  f15a = newl; Line(f15a) = {p33,p100};
+  f15b = newl; Line(f15b) = {p100,p34};
 
-  Line(16+fshift) = {31+dshift,32+dshift};
-  Line(17+fshift) = {33+dshift,34+dshift};
-  Line(18+fshift) = {35+dshift,36+dshift};
-  Line(19+fshift) = {37+dshift,38+dshift};
-  Line(20+fshift) = {39+dshift,40+dshift};
+  f16 = newl; Line(f16) = {p35,p36};
+  f17 = newl; Line(f17) = {p37,p38};
+  f18 = newl; Line(f18) = {p39,p40};
+  f19 = newl; Line(f19) = {p41,p42};
+  f20 = newl; Line(f20) = {p43,p44};
   
-  Line(21+fshift+102) = {41+dshift,100};
-  Line(21+fshift+103) = {100,42+dshift};
+  f21a = newl; Line(f21a) = {p45,p100};
+  f21b = newl; Line(f21b) = {p100,p46};
   
-  Line(22+fshift) = {43+dshift,44+dshift};
-  Line(23+fshift) = {45+dshift,46+dshift};  
+  f22 = newl; Line(f22) = {p47,p48};
+  f23 = newl; Line(f23) = {p49,p50};  
 
-  Transfinite Line{4,5,13,21,23,25,35,36} = nx Using Progression pr;
-  Transfinite Line{1,2,3,6,7,8,9,10,11,12,14,15,16,17,18,19,20,22,24,26,27,28,29,30,31,32,33,34,37,38,39,40,41} = ny Using Progression pr;
+  Transfinite Line{l4,l5,l13,l21,l23,l25,l35,l36} = nx Using Progression pr;
+  Transfinite Line{l1,l2,l3,l6,l7,l8,l9,l10,l11,l12,l14,l15,l16,l17,l18,l19,l20,l22,l24,l26,l27,l28,l29,l30,l31,l32,l33,l34,l37,l38,l39,l40,l41} = ny Using Progression pr;
 
-  Transfinite Line{1+fshift} = ny Using Progression pr;
-  Transfinite Line{2+fshift} = ny Using Progression pr;
-  Transfinite Line{3+fshift} = ny Using Progression pr;    
-  Transfinite Line{4+fshift} = ny Using Progression pr;
-  Transfinite Line{5+fshift} = ny Using Progression pr;
-  Transfinite Line{6+fshift} = ny Using Progression pr;
-  Transfinite Line{7+fshift} = ny Using Progression pr;
-  Transfinite Line{8+fshift} = ny Using Progression pr;  
-  Transfinite Line{9+fshift} = ny Using Progression pr;    
-  Transfinite Line{10+fshift} = ny Using Progression pr;
-  Transfinite Line{11+fshift} = ny Using Progression pr;
-  Transfinite Line{12+fshift} = ny Using Progression pr;
-  Transfinite Line{13+fshift} = ny Using Progression pr;
-  Transfinite Line{14+fshift} = ny Using Progression pr;
-  Transfinite Line{15+fshift+100} = ny Using Progression pr;
-  Transfinite Line{15+fshift+101} = ny Using Progression pr;
-  Transfinite Line{16+fshift} = ny Using Progression pr;
-  Transfinite Line{17+fshift} = ny Using Progression pr;
-  Transfinite Line{18+fshift} = ny Using Progression pr;
-  Transfinite Line{19+fshift} = ny Using Progression pr;
-  Transfinite Line{20+fshift} = ny Using Progression pr;
-  Transfinite Line{21+fshift+102} = ny Using Progression pr;
-  Transfinite Line{21+fshift+103} = ny Using Progression pr;
-  Transfinite Line{22+fshift} = ny Using Progression pr;  
-  Transfinite Line{23+fshift} = ny Using Progression pr;    
+  Transfinite Line{f1} = nf Using Progression pr;
+  Transfinite Line{f2} = nf Using Progression pr;
+  Transfinite Line{f3} = nf Using Progression pr;    
+  Transfinite Line{f4} = nf Using Progression pr;
+  Transfinite Line{f5} = nf Using Progression pr;
+  Transfinite Line{f6} = nf Using Progression pr;
+  Transfinite Line{f7} = nf Using Progression pr;
+  Transfinite Line{f8} = nf Using Progression pr;  
+  Transfinite Line{f9} = nf Using Progression pr;    
+  Transfinite Line{f10} = nf Using Progression pr;
+  Transfinite Line{f11} = nf Using Progression pr;
+  Transfinite Line{f12} = nf Using Progression pr;
+  Transfinite Line{f13} = nf Using Progression pr;
+  Transfinite Line{f14} = nf Using Progression pr;
+  Transfinite Line{f15a} = nf Using Progression pr;
+  Transfinite Line{f15b} = nf Using Progression pr;
+  Transfinite Line{f16} = nf Using Progression pr;
+  Transfinite Line{f17} = nf Using Progression pr;
+  Transfinite Line{f18} = nf Using Progression pr;
+  Transfinite Line{f19} = nf Using Progression pr;
+  Transfinite Line{f20} = nf Using Progression pr;
+  Transfinite Line{f21a} = nf Using Progression pr;
+  Transfinite Line{f21b} = nf Using Progression pr;
+  Transfinite Line{f22} = nf Using Progression pr;  
+  Transfinite Line{f23} = nf Using Progression pr;    
 
 
 // Definição da superfície 
 
-  Line Loop(1) = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41};
+  Line Loop(1) = {l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11,l12,l13,l14,l15,l16,l17,l18,l19,l20,l21,l22,l23,l24,l25,l26,l27,l28,l29,l30,l31,l32,l33,l34,l35,l36,l37,l38,l39,l40,l41};
   Plane Surface(1) = {1};
 
-  Line{1+fshift} In Surface{1};
-  Line{2+fshift} In Surface{1};
-  Line{3+fshift} In Surface{1};
-  Line{4+fshift} In Surface{1};
-  Line{5+fshift} In Surface{1};
-  Line{6+fshift} In Surface{1};
-  Line{7+fshift} In Surface{1};
-  Line{8+fshift} In Surface{1};
-  Line{9+fshift} In Surface{1};
-  Line{10+fshift} In Surface{1};
-  Line{11+fshift} In Surface{1};
-  Line{12+fshift} In Surface{1};
-  Line{13+fshift} In Surface{1};
-  Line{14+fshift} In Surface{1};
-  Line{15+fshift+100} In Surface{1};
-  Line{15+fshift+101} In Surface{1};
-  Line{16+fshift} In Surface{1};
-  Line{17+fshift} In Surface{1};
-  Line{18+fshift} In Surface{1};
-  Line{19+fshift} In Surface{1};
-  Line{20+fshift} In Surface{1};
-  Line{21+fshift+102} In Surface{1};
-  Line{21+fshift+103} In Surface{1};
-  Line{22+fshift} In Surface{1};
-  Line{23+fshift} In Surface{1};
+  Line{f1} In Surface{1};
+  Line{f2} In Surface{1};
+  Line{f3} In Surface{1};
+  Line{f4} In Surface{1};
+  Line{f5} In Surface{1};
+  Line{f6} In Surface{1};
+  Line{f7} In Surface{1};
+  Line{f8} In Surface{1};
+  Line{f9} In Surface{1};
+  Line{f10} In Surface{1};
+  Line{f11} In Surface{1};
+  Line{f12} In Surface{1};
+  Line{f13} In Surface{1};
+  Line{f14} In Surface{1};
+  Line{f15a} In Surface{1};
+  Line{f15b} In Surface{1};
+  Line{f16} In Surface{1};
+  Line{f17} In Surface{1};
+  Line{f18} In Surface{1};
+  Line{f19} In Surface{1};
+  Line{f20} In Surface{1};
+  Line{f21a} In Surface{1};
+  Line{f21b} In Surface{1};
+  Line{f22} In Surface{1};
+  Line{f23} In Surface{1};
 
   //Transfinite Surface {1};
 
@@ -226,110 +229,110 @@ pr = 1;
   EndIf
 
   Physical Surface("Omega") = {1};
-  Physical Line("bottom") = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21};
-  Physical Line("top") = {25,26,27,28,29,30,31,32,33,34,35,36,37,38};
-  Physical Line("right") = {22,23};
-  Physical Line("left") = {39,40,41};
+  Physical Line("bottom") = {l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11,l12,l13,l14,l15,l16,l17,l18,l19,l20,l21};
+  Physical Line("top") = {l25,l26,l27,l28,l29,l30,l31,l32,l33,l34,l35,l36,l37,l38};
+  Physical Line("right") = {l22,l23};
+  Physical Line("left") = {l39,l40,l41};
   
-  Physical Line("f1") = {1+fshift};
-  Physical Point("P5") = {5};
-  Physical Point("P6") = {6};
+  Physical Line("f1") = {f1};
+  Physical Point("P5") = {p5};
+  Physical Point("P6") = {p6};
 
-  Physical Line("f2") = {2+fshift};
-  Physical Point("P7") = {7};
-  Physical Point("P8") = {8};
+  Physical Line("f2") = {f2};
+  Physical Point("P7") = {p7};
+  Physical Point("P8") = {p8};
 
-  Physical Line("f3") = {3+fshift};
-  Physical Point("P9") = {9};
-  Physical Point("P10") = {10};
+  Physical Line("f3") = {f3};
+  Physical Point("P9") = {p9};
+  Physical Point("P10") = {p10};
 
-  Physical Line("f4") = {4+fshift};
-  Physical Point("P11") = {11};
-  Physical Point("P12") = {12};
+  Physical Line("f4") = {f4};
+  Physical Point("P11") = {p11};
+  Physical Point("P12") = {p12};
 
-  Physical Line("f5") = {5+fshift};
-  Physical Point("P13") = {13};
-  Physical Point("P14") = {14};
+  Physical Line("f5") = {f5};
+  Physical Point("P13") = {p13};
+  Physical Point("P14") = {p14};
 
-  Physical Line("f6") = {6+fshift};
-  Physical Point("P15") = {15};
-  Physical Point("P16") = {16};
+  Physical Line("f6") = {f6};
+  Physical Point("P15") = {p15};
+  Physical Point("P16") = {p16};
 
-  Physical Line("f7") = {7+fshift};
-  Physical Point("P17") = {17};
-  Physical Point("P18") = {18};
+  Physical Line("f7") = {f7};
+  Physical Point("P17") = {p17};
+  Physical Point("P18") = {p18};
 
-  Physical Line("f8") = {8+fshift};
-  Physical Point("P19") = {19};
-  Physical Point("P20") = {20};
+  Physical Line("f8") = {f8};
+  Physical Point("P19") = {p19};
+  Physical Point("P20") = {p20};
 
-  Physical Line("f9") = {9+fshift};
-  Physical Point("P21") = {21};
-  Physical Point("P22") = {22};
+  Physical Line("f9") = {f9};
+  Physical Point("P21") = {p21};
+  Physical Point("P22") = {p22};
 
-  Physical Line("f10") = {10+fshift};
-  Physical Point("P23") = {23};
-  Physical Point("P24") = {24};
+  Physical Line("f10") = {f10};
+  Physical Point("P23") = {p23};
+  Physical Point("P24") = {p24};
 
-  Physical Line("f11") = {11+fshift};
-  Physical Point("P25") = {25};
-  Physical Point("P26") = {26};
+  Physical Line("f11") = {f11};
+  Physical Point("P25") = {p25};
+  Physical Point("P26") = {p26};
 
-  Physical Line("f12") = {12+fshift};
-  Physical Point("P27") = {27};
-  Physical Point("P28") = {28};
+  Physical Line("f12") = {f12};
+  Physical Point("P27") = {p27};
+  Physical Point("P28") = {p28};
 
-  Physical Line("f13") = {13+fshift};
-  Physical Point("P29") = {29};
-  Physical Point("P30") = {30};
+  Physical Line("f13") = {f13};
+  Physical Point("P29") = {p29};
+  Physical Point("P30") = {p30};
 
-  Physical Line("f14") = {14+fshift};
-  Physical Point("P31") = {31};
-  Physical Point("P32") = {32};
+  Physical Line("f14") = {f14};
+  Physical Point("P31") = {p31};
+  Physical Point("P32") = {p32};
 
-  Physical Line("f15") = {15+fshift+100};      
-  Physical Point("P33") = {33};
-  Physical Point("P100") = {100};
+  Physical Line("f15") = {f15a};      
+  Physical Point("P33") = {p33};
+  Physical Point("P100") = {p100};
 
-  Physical Line("f15b") = {15+fshift+101};      
-  Physical Point("P100a") = {100};
-  Physical Point("P34") = {34};
+  Physical Line("f15b") = {f15b};      
+  Physical Point("P100a") = {p100};
+  Physical Point("P34") = {p34};
 
-  Physical Line("f16") = {16+fshift};
-  Physical Point("P35") = {35};
-  Physical Point("P36") = {36};
+  Physical Line("f16") = {f16};
+  Physical Point("P35") = {p35};
+  Physical Point("P36") = {p36};
 
-  Physical Line("f17") = {17+fshift};
-  Physical Point("P37") = {37};
-  Physical Point("P38") = {38};
+  Physical Line("f17") = {f17};
+  Physical Point("P37") = {p37};
+  Physical Point("P38") = {p38};
 
-  Physical Line("f18") = {18+fshift};
-  Physical Point("P39") = {39};
-  Physical Point("P40") = {40};
+  Physical Line("f18") = {f18};
+  Physical Point("P39") = {p39};
+  Physical Point("P40") = {p40};
 
-  Physical Line("f19") = {19+fshift};      
-  Physical Point("P41") = {41};
-  Physical Point("P42") = {42};
+  Physical Line("f19") = {f19};      
+  Physical Point("P41") = {p41};
+  Physical Point("P42") = {p42};
 
-  Physical Line("f20") = {20+fshift};
-  Physical Point("P43") = {43};
-  Physical Point("P44") = {44};
+  Physical Line("f20") = {f20};
+  Physical Point("P43") = {p43};
+  Physical Point("P44") = {p44};
 
-  Physical Line("f21") = {21+fshift+102};
-  Physical Point("P45") = {45};
-  Physical Point("P100b") = {100};
+  Physical Line("f21") = {f21a};
+  Physical Point("P45") = {p45};
+  Physical Point("P100b") = {p100};
 
-  Physical Line("f21b") = {21+fshift+103};
-  Physical Point("P100c") = {100};
-  Physical Point("P46") = {46};
+  Physical Line("f21b") = {f21b};
+  Physical Point("P100c") = {p100};
+  Physical Point("P46") = {p46};
 
-  Physical Line("f22") = {22+fshift};      
-  Physical Point("P47") = {47};
-  Physical Point("P48") = {48};
+  Physical Line("f22") = {f22};      
+  Physical Point("P47") = {p47};
+  Physical Point("P48") = {p48};
 
-  Physical Line("f23") = {23+fshift};      
-  Physical Point("P49") = {49};
-  Physical Point("P50") = {50};
+  Physical Line("f23") = {f23};      
+  Physical Point("P49") = {p49};
+  Physical Point("P50") = {p50};
 
   Coherence Mesh;
 

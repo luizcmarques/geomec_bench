@@ -19,6 +19,10 @@
 #include "pzanalysis.h"
 #include "pzbndcond.h"
 #include "pzpoisson3d.h"
+#include "pzbuildmultiphysicsmesh.h"
+#include "TPZMultiphysicsInterfaceEl.h"
+#include "pzmultiphysicselement.h"
+#include "TPZInterfaceEl.h"
 
 #include "pzelasmat.h"
 #include "pzinterpolationspace.h"
@@ -26,7 +30,7 @@
 #include "TPZInterfaceEl.h"
 #include "TPZMultiphysicsInterfaceEl.h"
 #include "pzmultiphysicselement.h"
-
+#include "pzbuildmultiphysicsmesh.h"
 #include "pzporoelasticmf2d.h"
 
 #include "TPZDarcy1DMaterial.h"
@@ -76,7 +80,7 @@ MonofasicoElastico::MonofasicoElastico()
     fmatBCleft=5;
     
     //Número de fraturas do problema:
-    fnFrac = 2;
+    fnFrac = 40;
     
     fmatFrac.resize(fnFrac);
     fmatPointLeft.resize(fnFrac);
@@ -89,8 +93,9 @@ MonofasicoElastico::MonofasicoElastico()
     }
     
     //Material do elemento de interface
-    fmatInterface=117;
-    fmatFluxWrap=121;
+    fmatLagrange =500;
+    fmatInterface =501;
+    fmatFluxWrap= 500;
     
     //Materiais das condições de contorno (elementos de interface)
     fmatIntBCbott=-11;
@@ -222,10 +227,15 @@ void MonofasicoElastico::Run(int pOrder)
     }
             
     BreakH1Connectivity(*cmesh_E, fracture_ids); // Insert new connects to represent normal fluxes
+    
+            
     TPZPoroElasticMF2d *mymaterial;
     
     TPZCompMesh *cmesh_m = CMesh_m(gmesh, pOrder, mymaterial); //Função para criar a malha computacional multifísica
     
+            
+            
+            
     TPZManVector<TPZCompMesh *, 3> meshvector(1);
     meshvector[0] = cmesh_E;
   //  meshvector[1] = cmesh_q;
@@ -469,7 +479,7 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench2crossingFrac.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBenchP21Max.msh";
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
@@ -580,9 +590,9 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     }
 
     //Criando material para FluxWrap
-    TPZBndCond * bc_fracture_wrap;
-    bc_fracture_wrap = material->CreateBC(material,fmatFluxWrap,fdirichlet,val1,val2);
-    cmesh->InsertMaterialObject(bc_fracture_wrap);
+//    TPZBndCond * bc_fracture_wrap;
+//    bc_fracture_wrap = material->CreateBC(material,fmatFluxWrap,fdirichlet,val1,val2);
+//    cmesh->InsertMaterialObject(bc_fracture_wrap);
     
     //Criando elementos computacionais que gerenciarão o espaco de aproximacao da malha:
     
@@ -965,9 +975,89 @@ void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int
     
     for (unsigned int i_f = 0; i_f <  fracture_ids.size(); i_f++) {
         TPZFractureNeighborData fracture(cmesh.Reference(),fracture_ids[i_f],boundaries_ids);
+        fracture.OpenFracture(&cmesh);
+        SetDiscontinuosFrac(cmesh, fracture);
+        SetInterfaces(cmesh, fracture);
     }
 }
 
+void MonofasicoElastico::SetInterfaces(TPZCompMesh &cmesh, TPZFractureNeighborData &fracture)
+{
+    int fracture_id = fracture.GetFractureMaterialId();
+    TPZAdmChunkVector<TPZGeoEl *> &elvec = cmesh.Reference()->ElementVec();
+    int meshdim = cmesh.Dimension();
+    int64_t nelem = elvec.NElements();
+
+    int64_t index;
+    
+    std::set<int64_t> left_el_indexes = fracture.GetLeftIndexes();
+    std::set<int64_t> right_el_indexes = fracture.GetRightIndexes();
+    
+    for (int iel = 0; iel < nelem; iel++) {
+        TPZGeoEl *gel = elvec[iel];
+        const int gelMatId = gel->MaterialId();
+        if (gelMatId != fracture_id)
+            continue;
+        if (gel->HasSubElement())
+            continue;
+        TPZGeoElSide gelside(gel, gel->NSides() - 1);
+        TPZGeoElSide neigh = gelside.Neighbour();
+        int64_t neigh_index = neigh.Element()->Index();
+        
+        while (gelside != neigh) {
+            if ((left_el_indexes.find(neigh_index) != left_el_indexes.end())||(right_el_indexes.find(neigh_index) != right_el_indexes.end())) {
+                TPZCompEl *cel = neigh.Element()->Reference();
+                if (!cel) {
+                    DebugStop();
+                }
+                TPZStack<TPZCompElSide> celstack;
+                gelside.EqualLevelCompElementList(celstack, 0, 0);
+                if (celstack.size() != 2) {
+                    DebugStop();
+                }
+                new TPZMultiphysicsInterfaceElement(cmesh, gel, index, celstack[0], celstack[1]);
+                
+            }
+            neigh = neigh.Neighbour();
+        }
+        
+    }
+    
+}
+
+void MonofasicoElastico::SetDiscontinuosFrac(TPZCompMesh &cmesh, TPZFractureNeighborData &fracture)
+{
+
+    int fracture_id = fracture.GetFractureMaterialId();
+    TPZAdmChunkVector<TPZGeoEl *> &elvec = cmesh.Reference()->ElementVec();
+    
+    int meshdim = cmesh.Dimension();
+    cmesh.SetDimModel(meshdim);
+    cmesh.ApproxSpace().SetAllCreateFunctionsHDiv(meshdim);
+    
+    int64_t nelem = cmesh.Reference()->NElements();
+    
+    // Criar elementos Dim-1 entre a fratura e os elementos volumétricos
+    for (int64_t i=0; i<nelem; ++i) {
+        TPZGeoEl *gel = elvec[i];
+        int matid = gel->MaterialId();
+        if(matid != fracture_id)
+        {
+            continue;
+        }
+        
+        int64_t index;
+        cmesh.CreateCompEl(gel, index);
+        TPZCompEl *cel = cmesh.Element(index);
+        int64_t cindex = cel->ConnectIndex(0);
+        int lagrangelevel = 1;
+        cmesh.ConnectVec()[cindex].SetLagrangeMultiplier(lagrangelevel);
+    }
+    
+    cmesh.Reference()->ResetReference();
+    //cmesh->expandsolution();
+    
+}
 
 void MonofasicoElastico::AddMultiphysicsInterfaces(TPZCompMesh &cmesh)
 {
