@@ -80,7 +80,7 @@ MonofasicoElastico::MonofasicoElastico()
     fmatBCleft=5;
     
     //Número de fraturas do problema:
-    fnFrac = 40;
+    fnFrac = 1;
     
     fmatFrac.resize(fnFrac);
     fmatPointLeft.resize(fnFrac);
@@ -93,9 +93,9 @@ MonofasicoElastico::MonofasicoElastico()
     }
     
     //Material do elemento de interface
-    fmatLagrange =500;
-    fmatInterface =501;
-    fmatFluxWrap= 500;
+    fmatInterfaceLeft = 501;
+    fmatInterfaceRight = 502;
+    fmatFluxWrap= 503;
     
     //Materiais das condições de contorno (elementos de interface)
     fmatIntBCbott=-11;
@@ -195,7 +195,7 @@ void MonofasicoElastico::Run(int pOrder)
     
     //Gerando malha geométrica:
     TPZGeoMesh *gmesh = CreateGMesh(); //Função para criar a malha geometrica
-    int n_div = 1;
+    int n_div = 0;
     UniformRef(gmesh,n_div);
             
 #ifdef PZDEBUG
@@ -479,7 +479,7 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBenchP21Max.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBenchConnectsVerify.msh";
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
@@ -983,6 +983,11 @@ void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int
 
 void MonofasicoElastico::SetInterfaces(TPZCompMesh &cmesh, TPZFractureNeighborData &fracture)
 {
+    TPZGeoMesh *gmesh = cmesh.Reference();
+    gmesh->ResetReference();
+    cmesh.LoadReferences();
+    std::vector<int64_t> fracture_index = fracture.GetFractureIndexes();
+    
     int fracture_id = fracture.GetFractureMaterialId();
     TPZAdmChunkVector<TPZGeoEl *> &elvec = cmesh.Reference()->ElementVec();
     int meshdim = cmesh.Dimension();
@@ -993,35 +998,52 @@ void MonofasicoElastico::SetInterfaces(TPZCompMesh &cmesh, TPZFractureNeighborDa
     std::set<int64_t> left_el_indexes = fracture.GetLeftIndexes();
     std::set<int64_t> right_el_indexes = fracture.GetRightIndexes();
     
-    for (int iel = 0; iel < nelem; iel++) {
-        TPZGeoEl *gel = elvec[iel];
+    for (int iel = 0; iel < fracture_index.size(); iel++) {
+        TPZGeoEl *gel = elvec[fracture_index[iel]];
         const int gelMatId = gel->MaterialId();
         if (gelMatId != fracture_id)
             continue;
         if (gel->HasSubElement())
             continue;
         TPZGeoElSide gelside(gel, gel->NSides() - 1);
-        TPZGeoElSide neigh = gelside.Neighbour();
-        int64_t neigh_index = neigh.Element()->Index();
-        
-        while (gelside != neigh) {
-            if ((left_el_indexes.find(neigh_index) != left_el_indexes.end())||(right_el_indexes.find(neigh_index) != right_el_indexes.end())) {
-                TPZCompEl *cel = neigh.Element()->Reference();
-                if (!cel) {
-                    DebugStop();
-                }
-                TPZStack<TPZCompElSide> celstack;
-                gelside.EqualLevelCompElementList(celstack, 0, 0);
-                if (celstack.size() != 2) {
-                    DebugStop();
-                }
-                new TPZMultiphysicsInterfaceElement(cmesh, gel, index, celstack[0], celstack[1]);
+        TPZCompElSide celside = gelside.Reference();
+        if (!celside) {
+            DebugStop();
+        }
+//        TPZGeoElSide neigh = gelside.Neighbour();
+//        int64_t neigh_index = neigh.Element()->Index();
+        TPZStack<TPZCompElSide> celstack;
+        gelside.EqualLevelCompElementList(celstack, 0, 0);
+        if (celstack.size() != 2) {
+            DebugStop();
+        }
+        for(int stack_i=0; stack_i <celstack.size(); stack_i++){
+            TPZGeoElSide neigh = celstack[stack_i].Reference();
+            int64_t neigh_index = neigh.Element()->Index();
+            
+            if(left_el_indexes.find(neigh_index)!=left_el_indexes.end()){
+             
+                TPZGeoElBC gbcleft(gelside,fmatInterfaceLeft);
+                int64_t index;
+                new TPZInterfaceElement(cmesh,gbcleft.CreatedElement(),index,celside,celstack[stack_i]);
+                
+            }else if((right_el_indexes.find(neigh_index) != right_el_indexes.end())){
+
+                TPZGeoElBC gbcright(gelside,fmatInterfaceRight);
+                int64_t index;
+                new TPZInterfaceElement(cmesh,gbcright.CreatedElement(),index,celside,celstack[stack_i]);
                 
             }
-            neigh = neigh.Neighbour();
+            
         }
         
+
+        
+        
     }
+
+        
+//        if ((left_el_indexes.find(neigh_index) != left_el_indexes.end())||(right_el_indexes.find(neigh_index) != right_el_indexes.end())) {}
     
 }
 
@@ -1055,7 +1077,7 @@ void MonofasicoElastico::SetDiscontinuosFrac(TPZCompMesh &cmesh, TPZFractureNeig
     }
     
     cmesh.Reference()->ResetReference();
-    //cmesh->expandsolution();
+    cmesh.ExpandSolution();
     
 }
 

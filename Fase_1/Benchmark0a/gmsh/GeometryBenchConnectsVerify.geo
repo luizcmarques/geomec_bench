@@ -10,12 +10,12 @@ Mesh.SecondOrderLinear = 0;
 a = 5; 
 b = 5;
 h = 10;
-L = 200;
-Lf = 200;
+L = 10;
+Lf = 10;
 
 n_bc = 2;
 nx = 3;
-ny = 2;
+ny = 3;
 pr = 1.0;
 
 // Coordenadas dos pontos
@@ -28,7 +28,7 @@ pr = 1.0;
 
   //Fratura
   p5 = newp; Point(p5) = {0, a, 0};
-  p6 = newp; Point(p6) = {150, b, 0};  
+  p6 = newp; Point(p6) = {5, b, 0};  
 
 // Fronteiras
 
@@ -43,7 +43,8 @@ pr = 1.0;
   f1 = newl; Line(f1) = {p5, p6};
 
   Transfinite Line{l1,l3} = nx Using Progression pr;
-  Transfinite Line{l2,l4} = ny Using Progression pr;
+  Transfinite Line{l2} = ny Using Progression pr;
+  Transfinite Line{l4,l5} = 2 Using Progression pr;
   Transfinite Line{f1} = 2 Using Progression pr;
 
 
@@ -64,7 +65,7 @@ pr = 1.0;
   Physical Line("bottom") = {l1};
   Physical Line("right") = {l2};
   Physical Line("top") = {l3};
-  Physical Line("left") = {l4};
+  Physical Line("left") = {l4,l5};
   Physical Line("frac") = {f1};
   Physical Point("PointLeft") = {p5};
   Physical Point("PointRight") = {p6};

@@ -75,8 +75,8 @@ private:
     
     //Material do elemento de interface
 
-    int fmatLagrange;
-    int fmatInterface;
+    int fmatInterfaceLeft;
+    int fmatInterfaceRight;
     int fmatFluxWrap;
     
     //Materiais das condições de contorno (elementos de interface)
