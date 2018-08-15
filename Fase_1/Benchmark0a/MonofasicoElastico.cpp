@@ -1025,13 +1025,13 @@ void MonofasicoElastico::SetInterfaces(TPZCompMesh &cmesh, TPZFractureNeighborDa
              
                 TPZGeoElBC gbcleft(gelside,fmatInterfaceLeft);
                 int64_t index;
-                new TPZInterfaceElement(cmesh,gbcleft.CreatedElement(),index,celside,celstack[stack_i]);
+//                new TPZInterfaceElement(cmesh,gbcleft.CreatedElement(),index,celside,celstack[stack_i]);
                 
             }else if((right_el_indexes.find(neigh_index) != right_el_indexes.end())){
 
                 TPZGeoElBC gbcright(gelside,fmatInterfaceRight);
                 int64_t index;
-                new TPZInterfaceElement(cmesh,gbcright.CreatedElement(),index,celside,celstack[stack_i]);
+//                new TPZInterfaceElement(cmesh,gbcright.CreatedElement(),index,celside,celstack[stack_i]);
                 
             }
             
@@ -1083,49 +1083,50 @@ void MonofasicoElastico::SetDiscontinuosFrac(TPZCompMesh &cmesh, TPZFractureNeig
 
 void MonofasicoElastico::AddMultiphysicsInterfaces(TPZCompMesh &cmesh)
 {
-    
-    TPZGeoMesh *gmesh = cmesh.Reference();
-    std::set<int> velmatid;
-    velmatid.insert(fmatFrac[0]);
-    
-    
-    int64_t nel = gmesh->NElements();
-    for (int64_t el=0; el<nel; el++) {
-        TPZGeoEl *gel = gmesh->Element(el);
-        int matid = gel->MaterialId();
-        if(velmatid.find(matid) == velmatid.end())
-        {
-            continue;
-        }
-        int nsides = gel->NSides();
-        TPZGeoElSide gelside(gel,nsides-1);
-        TPZGeoElSide neighbour = gelside.Neighbour();
-        while (neighbour != gelside) {
-            
-            TPZManVector<int64_t,3> LeftElIndices(1,0.),RightElIndices(1,0.);
-            LeftElIndices[0]=0;
-            RightElIndices[0]=1;
-            
-            if (neighbour.Element()->Dimension() == 1 && neighbour.Element()->MaterialId() == fmatFluxWrap) { //oioioi IDFlux -> ID
-                // create an interface element
-                TPZCompElSide celside = gelside.Reference();
-                TPZCompElSide Wrapneigh = neighbour.Reference();
-                if (!celside || !Wrapneigh) {
-                    DebugStop();
-                }
-                std::cout << "Created an element between volumetric element " << neighbour.Element()->Index() <<
-                " side " << neighbour.Side() <<
-                " and interface element " << gelside.Element()->Index() << std::endl;
-                TPZGeoElBC gelbc(gelside,fmatInterface);
-                int64_t index;
-                TPZMultiphysicsInterfaceElement *intf = new
-                TPZMultiphysicsInterfaceElement(cmesh,gelbc.CreatedElement(),index,Wrapneigh,celside);
-                intf->SetLeftRightElementIndices(LeftElIndices,RightElIndices);
-                
-            }
-            neighbour = neighbour.Neighbour();
-        }
-    }
+
+    DebugStop();
+//    TPZGeoMesh *gmesh = cmesh.Reference();
+//    std::set<int> velmatid;
+//    velmatid.insert(fmatFrac[0]);
+//
+//
+//    int64_t nel = gmesh->NElements();
+//    for (int64_t el=0; el<nel; el++) {
+//        TPZGeoEl *gel = gmesh->Element(el);
+//        int matid = gel->MaterialId();
+//        if(velmatid.find(matid) == velmatid.end())
+//        {
+//            continue;
+//        }
+//        int nsides = gel->NSides();
+//        TPZGeoElSide gelside(gel,nsides-1);
+//        TPZGeoElSide neighbour = gelside.Neighbour();
+//        while (neighbour != gelside) {
+//
+//            TPZManVector<int64_t,3> LeftElIndices(1,0.),RightElIndices(1,0.);
+//            LeftElIndices[0]=0;
+//            RightElIndices[0]=1;
+//
+//            if (neighbour.Element()->Dimension() == 1 && neighbour.Element()->MaterialId() == fmatFluxWrap) { //oioioi IDFlux -> ID
+//                // create an interface element
+//                TPZCompElSide celside = gelside.Reference();
+//                TPZCompElSide Wrapneigh = neighbour.Reference();
+//                if (!celside || !Wrapneigh) {
+//                    DebugStop();
+//                }
+//                std::cout << "Created an element between volumetric element " << neighbour.Element()->Index() <<
+//                " side " << neighbour.Side() <<
+//                " and interface element " << gelside.Element()->Index() << std::endl;
+//                TPZGeoElBC gelbc(gelside,fmatInterface);
+//                int64_t index;
+//                TPZMultiphysicsInterfaceElement *intf = new
+//                TPZMultiphysicsInterfaceElement(cmesh,gelbc.CreatedElement(),index,Wrapneigh,celside);
+//                intf->SetLeftRightElementIndices(LeftElIndices,RightElIndices);
+//
+//            }
+//            neighbour = neighbour.Neighbour();
+//        }
+//    }
     
 }
 

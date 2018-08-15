@@ -62,7 +62,7 @@ std::set<int64_t> & TPZFractureNeighborData::GetLeftIndexes(){
 
 /// Get geometric indexes for right
 std::set<int64_t> & TPZFractureNeighborData::GetRightIndexes(){
-    return m_gel_left_indexes;
+    return m_gel_right_indexes;
 }
 
 /// Constructor based on a computational mesh and fracture material id
