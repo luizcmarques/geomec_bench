@@ -422,19 +422,19 @@ void TPZFractureNeighborData::ClassifyNeighboursofPivots(){
         }
     }
     
+    //Definição dos Ids dos materiais vizinhos(Print)
     
-    
-    int left_id = 100;
-    for (auto it=m_gel_left_indexes.begin(); it != m_gel_left_indexes.end(); ++it){
-        int64_t iel = *it;
-        m_geometry->Element(iel)->SetMaterialId(left_id);
-    }
-    
-    int right_id = 200;
-    for (auto it=m_gel_right_indexes.begin(); it != m_gel_right_indexes.end(); ++it){
-        int64_t iel = *it;
-        m_geometry->Element(iel)->SetMaterialId(right_id);
-    }
+//    int left_id = 100;
+//    for (auto it=m_gel_left_indexes.begin(); it != m_gel_left_indexes.end(); ++it){
+//        int64_t iel = *it;
+//        m_geometry->Element(iel)->SetMaterialId(left_id);
+//    }
+//
+//    int right_id = 200;
+//    for (auto it=m_gel_right_indexes.begin(); it != m_gel_right_indexes.end(); ++it){
+//        int64_t iel = *it;
+//        m_geometry->Element(iel)->SetMaterialId(right_id);
+//    }
     
     std::ofstream filegvtk("Geometry_labels.vtk"); //Impressão da malha geométrica (formato vtk)
     TPZVTKGeoMesh::PrintGMeshVTK(m_geometry, filegvtk,true);

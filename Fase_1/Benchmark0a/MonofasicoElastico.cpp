@@ -559,10 +559,11 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     //REAL E = 0;
     //REAL poisson = 0;
     int planestress = -1;
-    TPZElasticityMaterial *material;
+    TPZMaterial *material;
     
     material = new TPZElasticityMaterial(fmatID, fEyoung, fpoisson, ffx, ffy, planestress);
     cmesh->InsertMaterialObject(material);
+    
     TPZMat1dLin *materialFrac;
     for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
         materialFrac = new TPZMat1dLin(fmatFrac[i_frac]);
@@ -595,6 +596,21 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
 //    cmesh->InsertMaterialObject(bc_fracture_wrap);
     
     //Criando elementos computacionais que gerenciarão o espaco de aproximacao da malha:
+    
+    // Inserir interface fratura - elem. volumétricos
+    TPZMat1dLin *matInterLeft = new TPZMat1dLin(fmatInterfaceLeft);
+    cmesh->InsertMaterialObject(matInterLeft);
+    //Dimensões do material (para HDiv):
+    TPZFMatrix<STATE> xkin3(1,1,0.), xcin3(1,1,0.), xbin3(1,1,0.), xfin3(1,1,0.);
+    matInterLeft->SetMaterial(xkin3, xcin3, xbin3, xfin3);
+    
+    
+    TPZMat1dLin *matInterRight = new TPZMat1dLin(fmatInterfaceRight);
+    cmesh->InsertMaterialObject(matInterRight);
+    //Dimensões do material (para HDiv):
+    TPZFMatrix<STATE> xkin4(1,1,0.), xcin4(1,1,0.), xbin4(1,1,0.), xfin4(1,1,0.);
+    matInterRight->SetMaterial(xkin4, xcin4, xbin4, xfin4);
+
     
     int ncel = cmesh->NElements();
     
@@ -1025,13 +1041,13 @@ void MonofasicoElastico::SetInterfaces(TPZCompMesh &cmesh, TPZFractureNeighborDa
              
                 TPZGeoElBC gbcleft(gelside,fmatInterfaceLeft);
                 int64_t index;
-//                new TPZInterfaceElement(cmesh,gbcleft.CreatedElement(),index,celside,celstack[stack_i]);
+                new TPZInterfaceElement(cmesh,gbcleft.CreatedElement(),index,celside,celstack[stack_i]);
                 
             }else if((right_el_indexes.find(neigh_index) != right_el_indexes.end())){
 
                 TPZGeoElBC gbcright(gelside,fmatInterfaceRight);
                 int64_t index;
-//                new TPZInterfaceElement(cmesh,gbcright.CreatedElement(),index,celside,celstack[stack_i]);
+                new TPZInterfaceElement(cmesh,gbcright.CreatedElement(),index,celside,celstack[stack_i]);
                 
             }
             
