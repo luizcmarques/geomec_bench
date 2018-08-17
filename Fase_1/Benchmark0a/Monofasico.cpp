@@ -113,7 +113,7 @@ void Monofasico::Run(int pOrder)
     
     HDivPiola = 1;
     
-    pOrder = 1; //Ordem polinomial de aproximação
+    pOrder = 2; //Ordem polinomial de aproximação
     
     //Gerando malha geométrica:
     

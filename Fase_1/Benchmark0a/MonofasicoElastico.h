@@ -144,10 +144,6 @@ public:
     /*  Uniform refinement */
     void UniformRef(TPZGeoMesh * gmesh, int n_div);
 
-    void SetDiscontinuosFrac(TPZCompMesh &cmesh, TPZFractureNeighborData &fracture);
-    
-    void SetInterfaces(TPZCompMesh &cmesh, TPZFractureNeighborData &fracture);
-
     /* Malhas computacionais */
     TPZCompMesh *CMesh_E(TPZGeoMesh *gmesh, int pOrder); // Malha computacional de elasticidade
     TPZCompMesh *CMesh_q(TPZGeoMesh *gmesh, int pOrder); // Malha computacional de fluxo

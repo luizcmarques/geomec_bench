@@ -155,7 +155,7 @@ void MonofasicoElastico::Run(int pOrder)
     
     REAL rockrho = 0.;
     REAL gravity = 0.;
-    REAL fx = 0.0;
+    REAL fx = 0.;
     REAL fy = gravity*rockrho;
     
     REAL alpha = 0.;
@@ -171,33 +171,15 @@ void MonofasicoElastico::Run(int pOrder)
     this->SetParameters(Eyoung, poisson, alpha, Se, perm, visc, fx, fy, sig0);
     
     ofstream saidaerro("ErroLoula.txt");
-    
-    for(int p = 2; p < 3; p++)
-    {
-        int pu = p;
-        int pq = pu;
-        int pp;
-//        if(triang==true){
-//            pp = pq-1;
-//        }else{
-            pq=pu-1;
-            pp = pq;
-//        }
-        
-        int h;
-        saidaerro<<"\n CALCULO DO ERRO, ELEM. TRIANG., COM ORDEM POLINOMIAL pu = "<< pu << ", pq = "<< pq << " e pp = "<< pp<<endl;
-        for (h = 3; h< 4; h++)
-        {
-            
-            saidaerro<<"\n========= PARA h = "<< h<<"  ============= "<<endl;
-    
 
-    
     //Gerando malha geométrica:
+    
     TPZGeoMesh *gmesh = CreateGMesh(); //Função para criar a malha geometrica
+   
     int n_div = 0;
+    
     UniformRef(gmesh,n_div);
-            
+    
 #ifdef PZDEBUG
     std::ofstream fileg("MalhaGeo.txt"); //Impressão da malha geométrica (formato txt)
     std::ofstream filegvtk("MalhaGeo.vtk"); //Impressão da malha geométrica (formato vtk)
@@ -206,157 +188,35 @@ void MonofasicoElastico::Run(int pOrder)
 #endif
     
     //Gerando malha computacional:
-
+    int p = 2;
+    TPZCompEl::SetgOrder(p);
     TPZCompMesh *cmesh_E = CMesh_E(gmesh, pOrder); //Função para criar a malha computacional da velocidade
-  //  TPZCompMesh *cmesh_q = CMesh_q(gmesh, pOrder); //Função para criar a malha computacional da velocidade
-  //  TPZCompMesh *cmesh_p = CMesh_p(gmesh, pOrder); //Função para criar a malha computacional da pressão
     
-    {
-        std::ofstream filecE("MalhaC_E.txt"); //Impressão da malha computacional da velocidade (formato txt)
-        std::ofstream filecq("MalhaC_q.txt"); //Impressão da malha computacional da velocidade (formato txt)
-        std::ofstream filecp("MalhaC_p.txt"); //Impressão da malha computacional da pressão (formato txt)
-        cmesh_E->Print(filecE);
- //       cmesh_q->Print(filecq);
- //       cmesh_p->Print(filecp);
-    }
+    std::ofstream filecEbf("MalhaC_E_before.txt"); //Impressão da malha computacional da velocidade (formato txt)
+    cmesh_E->Print(filecEbf);
     
     std::vector<int> fracture_ids;
-            
     for (int i_frac=0; i_frac<fnFrac; i_frac++) {
         fracture_ids.push_back(fmatFrac[i_frac]);
     }
             
     BreakH1Connectivity(*cmesh_E, fracture_ids); // Insert new connects to represent normal fluxes
     
-            
-    TPZPoroElasticMF2d *mymaterial;
+    std::ofstream filecE("MalhaC_E.txt"); //Impressão da malha computacional da velocidade (formato txt)
+    cmesh_E->Print(filecE);
     
-    TPZCompMesh *cmesh_m = CMesh_m(gmesh, pOrder, mymaterial); //Função para criar a malha computacional multifísica
-    
-            
-            
-            
     TPZManVector<TPZCompMesh *, 3> meshvector(1);
     meshvector[0] = cmesh_E;
-  //  meshvector[1] = cmesh_q;
-  //  meshvector[2] = cmesh_p;
-    
-    TPZBuildMultiphysicsMesh::AddElements(meshvector, cmesh_m);
-    TPZBuildMultiphysicsMesh::AddConnects(meshvector, cmesh_m);
-    TPZBuildMultiphysicsMesh::TransferFromMeshes(meshvector, cmesh_m);
-    cmesh_m->LoadReferences();
-    
-    {
-        std::ofstream filecm("MalhaC_m.txt"); //Impressão da malha computacional multifísica (formato txt)
-        cmesh_m->Print(filecm);
-    }
-    
-//    AddMultiphysicsInterfaces(*cmesh_m);
-    
-    {
-        std::ofstream filecm("MalhaC_m.txt"); //Impressão da malha computacional multifísica (formato txt)
-        cmesh_m->Print(filecm);
-    }
-    
     std::ofstream fileg1("MalhaGeo2.txt"); //Impressão da malha geométrica (formato txt)
     gmesh->Print(fileg1);
     
-    //Resolvendo o Sistema:
-  //  int NDeltaT = 1000000;
-  //  int intervsaidas = NDeltaT/20;
- //   REAL deltaT=timeT/NDeltaT; //second
- //   mymaterial->SetTimeStep(deltaT);
- //   REAL maxTime = timeT;
-    
-    TPZAnalysis an(cmesh_m);
+
+    //Resolução Analysis
+    bool optimizeBandwidth = false;
+    TPZAnalysis an(cmesh_E,optimizeBandwidth);
     TPZFMatrix<STATE> Initialsolution = an.Solution();
-    //Initialsolution.Print("solini");
-    
-    std::string outputfile;
-    outputfile = "TransientSolution";
-    int nthreads = 0;
-    //Criando matriz de massa (matM)
-    TPZAutoPointer <TPZMatrix<STATE> > matM = this->MassMatrix(mymaterial, cmesh_m, nthreads);
-    
-    //Criando matriz de rigidez (matK) e vetor de carga
-    TPZFMatrix<STATE> matK;
-    TPZFMatrix<STATE> fvec;
-    this->StiffMatrixLoadVec(mymaterial, cmesh_m, an, matK, fvec, nthreads);
-    
-    int nrows;
-    nrows = matM->Rows();
-    TPZFMatrix<STATE> TotalRhs(nrows,1,0.0);
-    TPZFMatrix<STATE> TotalRhstemp(nrows,1,0.0);
-    TPZFMatrix<STATE> Lastsolution = Initialsolution;
-    
+    an.Solve();
 
-        an.Solve();
-
-            std::stringstream outputfiletemp;
-            outputfiletemp << outputfile << ".vtk";
-            std::string plotfile = outputfiletemp.str();
-            this->PosProcessMultphysics(meshvector,cmesh_m,an,plotfile);
-
-            TPZVec<REAL> erros;
-            
-            saidaerro<<" Erro da simulacao multifisica do deslocamento (u)" <<endl;
-            TPZAnalysis an12(cmesh_E);
-            an12.SetExact(*Sol_exact);
-       //     an12.PostProcessError(erros, false, saidaerro);
-            
-            saidaerro<<" \nErro da simulacao multifisica do fluxo (q)" <<endl;
-       //     TPZAnalysis an22(cmesh_q);
-       //     an22.SetExact(*Sol_exact);
-       //     an22.PostProcessError(erros, false, saidaerro);
-            
-            saidaerro<<" Erro da simulacao multifisica da pressao (p)" <<endl;
-        //    TPZAnalysis an32(cmesh_p,false);
-        //    an32.SetExact(*Sol_exact);
-        //    an32.PostProcessError(erros, false, saidaerro);
-
-
-    
-    cmesh_E->CleanUp();
- //   cmesh_q->CleanUp();
- //   cmesh_p->CleanUp();
-    //mphysics->CleanUp();
-    delete cmesh_E;
- //   delete cmesh_q;
- //   delete cmesh_p;
-    //delete mphysics;
-    delete gmesh;
-    }
-}
-
-//    bool optimizeBandwidth = false; //Impede a renumeração das equacoes do problema (para obter o mesmo resultado do Oden)
-//    TPZAnalysis an(cmesh_m, optimizeBandwidth); //Cria objeto de análise que gerenciará a analise do problema
-//    TPZSkylineNSymStructMatrix matskl(cmesh_m); //caso nao simetrico ***
-//    matskl.SetNumThreads(numthreads);
-//
-//    an.SetStructuralMatrix(matskl);
-//    TPZStepSolver<STATE> step;
-//    step.SetDirect(ELU);
-//    an.SetSolver(step);
-//    an.Assemble(); //Assembla a matriz de rigidez (e o vetor de carga) global
-//    an.Solve();
-//
-//    //Pós-processamento (paraview):
-//
-//    std::string plotfile("Benchmark_0a_DarcyTest.vtk");
-//    TPZStack<std::string> scalnames, vecnames;
-//    scalnames.Push("P");
-//    vecnames.Push("V");
-//
-//    int postProcessResolution = 0; //  keep low as possible
-//    int dim = gmesh->Dimension();
-//    an.DefineGraphMesh(dim,scalnames,vecnames,plotfile);
-//    an.PostProcess(postProcessResolution,dim);
-//
-//    if(insert_fractures_Q) {
-//        std::cout << "Postprocessing fracture" << std::endl;
-//        Plot_over_fractures(cmesh_m);
-//    }
-//
     std::cout << "FINISHED!" << std::endl;
     
 }
@@ -554,23 +414,26 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     cmesh->SetDimModel(fdim);
     cmesh->SetAllCreateFunctionsContinuous();
     
-    /// criar material
+    //Material volumétrico
+    int nstate = 2;
     TPZVec<REAL> force(fdim,0.);
     //REAL E = 0;
     //REAL poisson = 0;
     int planestress = -1;
     TPZMaterial *material;
-    
     material = new TPZElasticityMaterial(fmatID, fEyoung, fpoisson, ffx, ffy, planestress);
     cmesh->InsertMaterialObject(material);
     
+    //Material Fraturas
     TPZMat1dLin *materialFrac;
     for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
         materialFrac = new TPZMat1dLin(fmatFrac[i_frac]);
+        TPZFMatrix<STATE> xkin3(nstate,nstate,0.), xcin3(nstate,nstate,0.), xbin3(nstate,nstate,0.), xfin3(nstate,nstate,0.);
+        materialFrac->SetMaterial(xkin3, xcin3, xbin3, xfin3);
         cmesh->InsertMaterialObject(materialFrac);
     }
     
-    ///Inserir condicao de contorno
+    //Inserir condicao de contorno
     TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
     TPZMaterial * BCond1 = material->CreateBC(material, fmatBCbott, fdirichlet, val1, val2);
     TPZMaterial * BCond2 = material->CreateBC(material, fmatBCtop, fdirichlet, val1, val2);
@@ -598,22 +461,18 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     //Criando elementos computacionais que gerenciarão o espaco de aproximacao da malha:
     
     // Inserir interface fratura - elem. volumétricos
-    TPZMat1dLin *matInterLeft = new TPZMat1dLin(fmatInterfaceLeft);
+    
+  
+    //Material Lagrange nas interfaces
+    TPZLagrangeMultiplier *matInterLeft = new TPZLagrangeMultiplier(fmatInterfaceLeft, fdim, nstate);
+    matInterLeft->SetMultiplier(-1);
     cmesh->InsertMaterialObject(matInterLeft);
-    //Dimensões do material (para HDiv):
-    TPZFMatrix<STATE> xkin3(1,1,0.), xcin3(1,1,0.), xbin3(1,1,0.), xfin3(1,1,0.);
-    matInterLeft->SetMaterial(xkin3, xcin3, xbin3, xfin3);
-    
-    
-    TPZMat1dLin *matInterRight = new TPZMat1dLin(fmatInterfaceRight);
-    cmesh->InsertMaterialObject(matInterRight);
-    //Dimensões do material (para HDiv):
-    TPZFMatrix<STATE> xkin4(1,1,0.), xcin4(1,1,0.), xbin4(1,1,0.), xfin4(1,1,0.);
-    matInterRight->SetMaterial(xkin4, xcin4, xbin4, xfin4);
 
+    TPZLagrangeMultiplier *matInterRight = new TPZLagrangeMultiplier(fmatInterfaceRight, fdim, nstate);
+    matInterRight->SetMultiplier(1);
+    cmesh->InsertMaterialObject(matInterRight);
     
     int ncel = cmesh->NElements();
-    
     for(int i =0; i<ncel; i++){
         TPZCompEl * compEl = cmesh->ElementVec()[i];
         if(!compEl) continue;
@@ -630,23 +489,24 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     matids.insert(fmatBCleft);
     matids.insert(fmatFluxWrap);
     
-    cmesh->AutoBuild(matids);
-    gmesh->ResetReference();
-    matids.clear();
-    
+//    cmesh->AutoBuild(matids);
+//    gmesh->ResetReference();
+//    matids.clear();
+//    cmesh->LoadReferences();
+//    cmesh->SetDefaultOrder(pOrder-1);
     for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
         matids.insert(fmatFrac[i_frac]);
         matids.insert(fmatPointLeft[i_frac]);
         matids.insert(fmatPointRight[i_frac]);
     }
+    matids.insert(fmatInterfaceRight);
+    matids.insert(fmatInterfaceLeft);
     
-    if (insert_fractures_Q) {
-        cmesh->SetDimModel(fdimFrac);
-        cmesh->SetAllCreateFunctionsHDiv();
-        cmesh->AutoBuild(matids);
-        cmesh->AdjustBoundaryElements();
-        cmesh->ExpandSolution();
-    }
+    cmesh->AutoBuild(matids);
+    cmesh->AdjustBoundaryElements();
+    cmesh->CleanUpUnconnectedNodes();
+    
+    
     return cmesh;
 }
 
@@ -992,109 +852,12 @@ void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int
     for (unsigned int i_f = 0; i_f <  fracture_ids.size(); i_f++) {
         TPZFractureNeighborData fracture(cmesh.Reference(),fracture_ids[i_f],boundaries_ids);
         fracture.OpenFracture(&cmesh);
-        SetDiscontinuosFrac(cmesh, fracture);
-        SetInterfaces(cmesh, fracture);
+        fracture.SetDiscontinuosFrac(&cmesh);
+        fracture.SetInterfaces(&cmesh, fmatInterfaceLeft, fmatInterfaceRight);
+        
+        std::ofstream filecE("CmeshWithFrac.txt"); //Impressão da malha computacional da velocidade (formato txt)
+        cmesh.Print(filecE);
     }
-}
-
-void MonofasicoElastico::SetInterfaces(TPZCompMesh &cmesh, TPZFractureNeighborData &fracture)
-{
-    TPZGeoMesh *gmesh = cmesh.Reference();
-    gmesh->ResetReference();
-    cmesh.LoadReferences();
-    std::vector<int64_t> fracture_index = fracture.GetFractureIndexes();
-    
-    int fracture_id = fracture.GetFractureMaterialId();
-    TPZAdmChunkVector<TPZGeoEl *> &elvec = cmesh.Reference()->ElementVec();
-    int meshdim = cmesh.Dimension();
-    int64_t nelem = elvec.NElements();
-
-    int64_t index;
-    
-    std::set<int64_t> left_el_indexes = fracture.GetLeftIndexes();
-    std::set<int64_t> right_el_indexes = fracture.GetRightIndexes();
-    
-    for (int iel = 0; iel < fracture_index.size(); iel++) {
-        TPZGeoEl *gel = elvec[fracture_index[iel]];
-        const int gelMatId = gel->MaterialId();
-        if (gelMatId != fracture_id)
-            continue;
-        if (gel->HasSubElement())
-            continue;
-        TPZGeoElSide gelside(gel, gel->NSides() - 1);
-        TPZCompElSide celside = gelside.Reference();
-        if (!celside) {
-            DebugStop();
-        }
-//        TPZGeoElSide neigh = gelside.Neighbour();
-//        int64_t neigh_index = neigh.Element()->Index();
-        TPZStack<TPZCompElSide> celstack;
-        gelside.EqualLevelCompElementList(celstack, 0, 0);
-        if (celstack.size() != 2) {
-            DebugStop();
-        }
-        for(int stack_i=0; stack_i <celstack.size(); stack_i++){
-            TPZGeoElSide neigh = celstack[stack_i].Reference();
-            int64_t neigh_index = neigh.Element()->Index();
-            
-            if(left_el_indexes.find(neigh_index)!=left_el_indexes.end()){
-             
-                TPZGeoElBC gbcleft(gelside,fmatInterfaceLeft);
-                int64_t index;
-                new TPZInterfaceElement(cmesh,gbcleft.CreatedElement(),index,celside,celstack[stack_i]);
-                
-            }else if((right_el_indexes.find(neigh_index) != right_el_indexes.end())){
-
-                TPZGeoElBC gbcright(gelside,fmatInterfaceRight);
-                int64_t index;
-                new TPZInterfaceElement(cmesh,gbcright.CreatedElement(),index,celside,celstack[stack_i]);
-                
-            }
-            
-        }
-        
-
-        
-        
-    }
-
-        
-//        if ((left_el_indexes.find(neigh_index) != left_el_indexes.end())||(right_el_indexes.find(neigh_index) != right_el_indexes.end())) {}
-    
-}
-
-void MonofasicoElastico::SetDiscontinuosFrac(TPZCompMesh &cmesh, TPZFractureNeighborData &fracture)
-{
-
-    int fracture_id = fracture.GetFractureMaterialId();
-    TPZAdmChunkVector<TPZGeoEl *> &elvec = cmesh.Reference()->ElementVec();
-    
-    int meshdim = cmesh.Dimension();
-    cmesh.SetDimModel(meshdim);
-    cmesh.ApproxSpace().SetAllCreateFunctionsHDiv(meshdim);
-    
-    int64_t nelem = cmesh.Reference()->NElements();
-    
-    // Criar elementos Dim-1 entre a fratura e os elementos volumétricos
-    for (int64_t i=0; i<nelem; ++i) {
-        TPZGeoEl *gel = elvec[i];
-        int matid = gel->MaterialId();
-        if(matid != fracture_id)
-        {
-            continue;
-        }
-        
-        int64_t index;
-        cmesh.CreateCompEl(gel, index);
-        TPZCompEl *cel = cmesh.Element(index);
-        int64_t cindex = cel->ConnectIndex(0);
-        int lagrangelevel = 1;
-        cmesh.ConnectVec()[cindex].SetLagrangeMultiplier(lagrangelevel);
-    }
-    
-    cmesh.Reference()->ResetReference();
-    cmesh.ExpandSolution();
-    
 }
 
 void MonofasicoElastico::AddMultiphysicsInterfaces(TPZCompMesh &cmesh)

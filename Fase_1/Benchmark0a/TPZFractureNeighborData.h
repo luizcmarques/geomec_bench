@@ -95,6 +95,12 @@ public:
     /// Open the connects of a fracture, create dim-1 fracture elements
     void OpenFracture(TPZCompMesh *cmesh);
     
+    /// Set Discontinuous elements on fractures
+    void SetDiscontinuosFrac(TPZCompMesh *cmesh);
+    
+    /// Set interfaces elements between fracture and volumetric elements
+    void SetInterfaces(TPZCompMesh *cmesh, int matInterfaceLeft, int matInterfaceRight);
+    
     /// Get node pivots
     std::vector<TPZGeoElSide> & GetPivotIndexes();
 

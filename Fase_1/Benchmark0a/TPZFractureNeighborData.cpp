@@ -8,6 +8,9 @@
 #include "TPZFractureNeighborData.h"
 #include "pzinterpolationspace.h"
 #include "pzintel.h"
+#include "TPZInterfaceEl.h"
+#include <pzgeoel.h>
+#include "pzgeoelbc.h"
 
 /// Default constructor
 TPZFractureNeighborData::TPZFractureNeighborData(){
@@ -520,7 +523,105 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
 }
     
 
+/// Set Discontinuous elements on fractures
+void TPZFractureNeighborData::SetDiscontinuosFrac(TPZCompMesh *cmesh){
     
+    int fracture_id = GetFractureMaterialId();
+    TPZAdmChunkVector<TPZGeoEl *> &elvec = cmesh->Reference()->ElementVec();
+    
+    int meshdim = cmesh->Dimension();
+    cmesh->SetDimModel(meshdim);
+    cmesh->ApproxSpace().SetAllCreateFunctionsHDiv(meshdim);
+    TPZGeoMesh *gmesh = cmesh->Reference();
+    gmesh->ResetReference();
+    int64_t nelem = cmesh->Reference()->NElements();
+    int fracture_cel_order = cmesh->GetDefaultOrder() - 1;
+    // Criar elementos Dim-1 entre a fratura e os elementos volumétricos
+    for (int64_t i=0; i<nelem; ++i) {
+        TPZGeoEl *gel = elvec[i];
+        int matid = gel->MaterialId();
+        if(matid != fracture_id)
+        {
+            continue;
+        }
+        
+        int64_t index;
+        cmesh->CreateCompEl(gel, index);
+        TPZCompEl *cel = cmesh->Element(index);
+        int64_t cindex = cel->ConnectIndex(0);
+        cel->SetgOrder(fracture_cel_order);
+        int lagrangelevel = 1;
+        cmesh->ConnectVec()[cindex].SetLagrangeMultiplier(lagrangelevel);
+        cmesh->ConnectVec()[cindex].SetOrder(fracture_cel_order, cindex);
+    }
+    
+    cmesh->Reference()->ResetReference();
+    cmesh->ExpandSolution();
+    
+}
+
+/// Set interfaces elements between fracture and volumetric elements
+void TPZFractureNeighborData::SetInterfaces(TPZCompMesh *cmesh, int matInterfaceLeft, int matInterfaceRight){
+    
+    TPZGeoMesh *gmesh = cmesh->Reference();
+    gmesh->ResetReference();
+    cmesh->LoadReferences();
+    std::vector<int64_t> fracture_index = GetFractureIndexes();
+    
+    int fracture_id = GetFractureMaterialId();
+    TPZAdmChunkVector<TPZGeoEl *> &elvec = cmesh->Reference()->ElementVec();
+    int meshdim = cmesh->Dimension();
+    int64_t nelem = elvec.NElements();
+    
+    int64_t index;
+    
+    std::set<int64_t> left_el_indexes = GetLeftIndexes();
+    std::set<int64_t> right_el_indexes = GetRightIndexes();
+    
+    for (int iel = 0; iel < fracture_index.size(); iel++) {
+        TPZGeoEl *gel = elvec[fracture_index[iel]];
+        const int gelMatId = gel->MaterialId();
+        if (gelMatId != fracture_id)
+            continue;
+        if (gel->HasSubElement())
+            continue;
+        TPZGeoElSide gelside(gel, gel->NSides() - 1);
+        TPZCompElSide celside = gelside.Reference();
+        if (!celside) {
+            DebugStop();
+        }
+        //        TPZGeoElSide neigh = gelside.Neighbour();
+        //        int64_t neigh_index = neigh.Element()->Index();
+        TPZStack<TPZCompElSide> celstack;
+        gelside.EqualLevelCompElementList(celstack, 0, 0);
+        if (celstack.size() != 2) {
+            DebugStop();
+        }
+        for(int stack_i=0; stack_i <celstack.size(); stack_i++){
+            TPZGeoElSide neigh = celstack[stack_i].Reference();
+            int64_t neigh_index = neigh.Element()->Index();
+            
+            if(left_el_indexes.find(neigh_index)!=left_el_indexes.end()){
+                
+                TPZGeoElBC gbcleft(gelside,matInterfaceLeft);
+                int64_t index;
+                new TPZInterfaceElement(*cmesh,gbcleft.CreatedElement(),index,celside,celstack[stack_i]);
+                
+            }else if((right_el_indexes.find(neigh_index) != right_el_indexes.end())){
+                
+                TPZGeoElBC gbcright(gelside,matInterfaceRight);
+                int64_t index;
+                new TPZInterfaceElement(*cmesh,gbcright.CreatedElement(),index,celside,celstack[stack_i]);
+                
+            }
+            
+        }
+        
+    }
+
+    
+    
+}
 
 
 
