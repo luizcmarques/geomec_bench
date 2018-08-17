@@ -209,12 +209,14 @@ void MonofasicoElastico::Run(int pOrder)
     meshvector[0] = cmesh_E;
     std::ofstream fileg1("MalhaGeo2.txt"); //Impressão da malha geométrica (formato txt)
     gmesh->Print(fileg1);
-    
+    std::ofstream filegvtk2("MalhaGeo2.vtk"); //Impressão da malha geométrica (formato vtk)
+    TPZVTKGeoMesh::PrintGMeshVTK(gmesh, filegvtk2,true);
 
     //Resolução Analysis
     bool optimizeBandwidth = false;
     TPZAnalysis an(cmesh_E,optimizeBandwidth);
     TPZFMatrix<STATE> Initialsolution = an.Solution();
+    an.Assemble();
     an.Solve();
 
     std::cout << "FINISHED!" << std::endl;
@@ -445,13 +447,13 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     cmesh->InsertMaterialObject(BCond3);
     cmesh->InsertMaterialObject(BCond4);
     
-    for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
-        //Mat Frac:
-        TPZMaterial * bc_frac_right = materialFrac->CreateBC(materialFrac, fmatPointRight[i_frac] , fdirichlet, val1, val2);
-        cmesh->InsertMaterialObject(bc_frac_right);
-        TPZMaterial * bc_frac_left = materialFrac->CreateBC(materialFrac, fmatPointLeft[i_frac] , fdirichlet, val1, val2);
-        cmesh->InsertMaterialObject(bc_frac_left);
-    }
+//    for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
+//        //Mat Frac:
+//        TPZMaterial * bc_frac_right = materialFrac->CreateBC(materialFrac, fmatPointRight[i_frac] , fdirichlet, val1, val2);
+//        cmesh->InsertMaterialObject(bc_frac_right);
+//        TPZMaterial * bc_frac_left = materialFrac->CreateBC(materialFrac, fmatPointLeft[i_frac] , fdirichlet, val1, val2);
+//        cmesh->InsertMaterialObject(bc_frac_left);
+//    }
 
     //Criando material para FluxWrap
 //    TPZBndCond * bc_fracture_wrap;
@@ -494,17 +496,18 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
 //    matids.clear();
 //    cmesh->LoadReferences();
 //    cmesh->SetDefaultOrder(pOrder-1);
-    for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
-        matids.insert(fmatFrac[i_frac]);
-        matids.insert(fmatPointLeft[i_frac]);
-        matids.insert(fmatPointRight[i_frac]);
-    }
-    matids.insert(fmatInterfaceRight);
-    matids.insert(fmatInterfaceLeft);
+//    for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
+//        matids.insert(fmatFrac[i_frac]);
+//        matids.insert(fmatPointLeft[i_frac]);
+//        matids.insert(fmatPointRight[i_frac]);
+//    }
+//    matids.insert(fmatInterfaceRight);
+//    matids.insert(fmatInterfaceLeft);
     
     cmesh->AutoBuild(matids);
     cmesh->AdjustBoundaryElements();
     cmesh->CleanUpUnconnectedNodes();
+    cmesh->InitializeBlock();
     
     
     return cmesh;
@@ -851,13 +854,14 @@ void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int
     
     for (unsigned int i_f = 0; i_f <  fracture_ids.size(); i_f++) {
         TPZFractureNeighborData fracture(cmesh.Reference(),fracture_ids[i_f],boundaries_ids);
-        fracture.OpenFracture(&cmesh);
-        fracture.SetDiscontinuosFrac(&cmesh);
+        fracture.OpenFracture(&cmesh); // (ok)
+        fracture.SetDiscontinuosFrac(&cmesh); // (ok)
         fracture.SetInterfaces(&cmesh, fmatInterfaceLeft, fmatInterfaceRight);
         
         std::ofstream filecE("CmeshWithFrac.txt"); //Impressão da malha computacional da velocidade (formato txt)
         cmesh.Print(filecE);
     }
+    int aka  = 0;
 }
 
 void MonofasicoElastico::AddMultiphysicsInterfaces(TPZCompMesh &cmesh)

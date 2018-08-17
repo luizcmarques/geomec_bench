@@ -1,4 +1,4 @@
-//
+
 //  TPZFractureNeighborData.cpp
 //  Benchmark0a
 //
@@ -450,7 +450,7 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
     TPZGeoMesh *gmesh = cmesh->Reference();
     gmesh->ResetReference();
     cmesh->LoadReferences();
-    std::map<int64_t,int64_t> connectmap;
+    std::map<int64_t,int64_t> connectmap_to_be_duplicated;
     std::set<int64_t> geonodes;
     for (auto gelside : m_pivot_indexes) {
         geonodes.insert(gelside.SideNodeIndex(0));
@@ -460,13 +460,17 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
         // Filtering elements by fracture material identifier
         TPZGeoEl *gel = m_geometry->Element(ifrac);
         
-        unsigned int n_corner_sides = gel->NSides();
-        for (unsigned int i_side = 0; i_side < n_corner_sides; i_side++) {
+        unsigned int n_sides = gel->NSides();
+        for (unsigned int i_side = 0; i_side < n_sides; i_side++) {
             
             int64_t nodeindex = gel->NodeIndex(i_side);
-            if (i_side < gel->NCornerNodes() && geonodes.find(nodeindex) == geonodes.end()) {
+            
+            bool is_non_pivot_Q = geonodes.find(nodeindex) == geonodes.end();
+            if (i_side < gel->NCornerNodes() && is_non_pivot_Q) { // Filtering just non pivots sides
                 continue;
             }
+            
+            // For all pivots and fracture itself side
             TPZStack<TPZGeoElSide> all_neighbors;
             TPZGeoElSide gel_corner_side(gel,i_side);
             gel_corner_side.AllNeighbours(all_neighbors);
@@ -476,16 +480,16 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
                 TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement *>(gel_neighbor->Reference());
                 if(!intel) continue;
                 int64_t conindex = intel->ConnectIndex(all_neighbors[i_neighbor].Side());
-                connectmap[conindex] = -1;
+                connectmap_to_be_duplicated[conindex] = -1;
             }
         
         }
     }
-    for (auto indexpair :connectmap) {
+    for (auto indexpair :connectmap_to_be_duplicated) {
         int64_t conindex = indexpair.first;
         TPZConnect &cnew (cmesh->ConnectVec()[conindex]);
         int64_t newindex = cmesh->AllocateNewConnect(cnew);
-        connectmap[conindex] = newindex;
+        connectmap_to_be_duplicated[conindex] = newindex;
     }
     
     for (auto ifrac : m_fracture_indexes) {
@@ -497,9 +501,12 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
         for (unsigned int i_side = 0; i_side < n_corner_sides; i_side++) {
             
             int64_t nodeindex = gel->NodeIndex(i_side);
-            if (i_side < gel->NCornerNodes() && geonodes.find(nodeindex) == geonodes.end()) {
+            
+            bool is_non_pivot_Q = geonodes.find(nodeindex) == geonodes.end();
+            if (i_side < gel->NCornerNodes() && is_non_pivot_Q) { // Filtering just non pivots sides
                 continue;
             }
+            
             TPZStack<TPZGeoElSide> all_neighbors;
             TPZGeoElSide gel_corner_side(gel,i_side);
             gel_corner_side.AllNeighbours(all_neighbors);
@@ -507,18 +514,24 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
             for (unsigned int i_neighbor = 0; i_neighbor < n_neighbors; i_neighbor++) {
                 TPZGeoEl * gel_neighbor = all_neighbors[i_neighbor].Element();
                 int64_t gelindex = gel_neighbor->Index();
-                if(m_gel_left_indexes.find(gelindex) == m_gel_left_indexes.end())
+                bool is_not_left_element_Q = m_gel_left_indexes.find(gelindex) == m_gel_left_indexes.end();
+                if(is_not_left_element_Q)
                 {
                     continue;
                 }
+                
+                // Set duplicated connect for left side elements
                 TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement *>(gel_neighbor->Reference());
                 if(!intel) continue;
                 int64_t conindex = intel->ConnectIndex(all_neighbors[i_neighbor].Side());
-                int64_t newindex = connectmap[conindex];
+                int64_t newindex = connectmap_to_be_duplicated[conindex];
                 intel->SetConnectIndex(all_neighbors[i_neighbor].Side(), newindex);
             }            
         }
     }
+    
+    cmesh->InitializeBlock();
+    cmesh->ExpandSolution();
 
 }
     
@@ -526,24 +539,21 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
 /// Set Discontinuous elements on fractures
 void TPZFractureNeighborData::SetDiscontinuosFrac(TPZCompMesh *cmesh){
     
-    int fracture_id = GetFractureMaterialId();
-    TPZAdmChunkVector<TPZGeoEl *> &elvec = cmesh->Reference()->ElementVec();
-    
     int meshdim = cmesh->Dimension();
     cmesh->SetDimModel(meshdim);
     cmesh->ApproxSpace().SetAllCreateFunctionsHDiv(meshdim);
     TPZGeoMesh *gmesh = cmesh->Reference();
     gmesh->ResetReference();
-    int64_t nelem = cmesh->Reference()->NElements();
+
+    int cmesh_order = cmesh->GetDefaultOrder();
     int fracture_cel_order = cmesh->GetDefaultOrder() - 1;
-    // Criar elementos Dim-1 entre a fratura e os elementos volumétricos
-    for (int64_t i=0; i<nelem; ++i) {
-        TPZGeoEl *gel = elvec[i];
-        int matid = gel->MaterialId();
-        if(matid != fracture_id)
-        {
-            continue;
-        }
+    cmesh->SetDefaultOrder(fracture_cel_order); // Because we need p - 1 order on fractures
+    
+    // Created fracture elements based on fracture material with id  GetFractureMaterialId()
+    for (auto ifrac : m_fracture_indexes) {
+            
+        // Filtering elements by fracture material identifier
+        TPZGeoEl *gel = m_geometry->Element(ifrac);
         
         int64_t index;
         cmesh->CreateCompEl(gel, index);
@@ -557,6 +567,7 @@ void TPZFractureNeighborData::SetDiscontinuosFrac(TPZCompMesh *cmesh){
     
     cmesh->Reference()->ResetReference();
     cmesh->ExpandSolution();
+    cmesh->SetDefaultOrder(cmesh_order); // Because we desire to preserve the original p order for the cmesh
     
 }
 
