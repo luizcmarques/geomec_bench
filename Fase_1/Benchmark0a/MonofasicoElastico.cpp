@@ -24,6 +24,8 @@
 #include "pzmultiphysicselement.h"
 #include "TPZInterfaceEl.h"
 
+#include "TPZStiffFracture.h"
+
 #include "pzelasmat.h"
 #include "pzinterpolationspace.h"
 #include "pzintel.h"
@@ -108,7 +110,7 @@ MonofasicoElastico::MonofasicoElastico()
     
     //Condições de contorno do problema
     fdirichlet =0;
-    fneumann = 11;
+    fneumann = 1;
     fpenetration=2;
     fpointtype=5;
     fdirichletPress=6;
@@ -176,7 +178,7 @@ void MonofasicoElastico::Run(int pOrder)
     
     TPZGeoMesh *gmesh = CreateGMesh(); //Função para criar a malha geometrica
    
-    int n_div = 0;
+    int n_div = 3;
     
     UniformRef(gmesh,n_div);
     
@@ -219,6 +221,20 @@ void MonofasicoElastico::Run(int pOrder)
     an.Assemble();
     an.Solve();
 
+    //Pós-processamento (paraview):
+    
+    std::string plotfile("Benchmark_0a_PoroElast.vtk");
+    TPZStack<std::string> scalnames, vecnames;
+    scalnames.Push("SigmaX");
+    scalnames.Push("SigmaY");
+    scalnames.Push("Pressure");
+    vecnames.Push("displacement");
+    
+    int postProcessResolution = 0; //  keep low as possible
+    int dim = gmesh->Dimension();
+    an.DefineGraphMesh(dim,scalnames,vecnames,plotfile);
+    an.PostProcess(postProcessResolution,dim);
+    
     std::cout << "FINISHED!" << std::endl;
     
 }
@@ -346,6 +362,14 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
     TPZGmshReader Geometry;
     REAL s = 1.0;
     Geometry.SetfDimensionlessL(s);
+    Geometry.fPZMaterialId[0]["PointLeft"] = 0;
+    Geometry.fPZMaterialId[0]["PointRight"] = 0;
+    Geometry.fPZMaterialId[1]["bottom"] = fmatBCbott;
+    Geometry.fPZMaterialId[1]["right"] = fmatBCright;
+    Geometry.fPZMaterialId[1]["top"] = fmatBCtop;
+    Geometry.fPZMaterialId[1]["left"] = fmatBCleft;
+    Geometry.fPZMaterialId[1]["frac"] = fmatFrac[0];
+    Geometry.fPZMaterialId[2]["Omega"] = fmatID;
     gmesh = Geometry.GeometricGmshMesh(grid);
     
     TPZCheckGeom check(gmesh);
@@ -437,10 +461,18 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     
     //Inserir condicao de contorno
     TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
-    TPZMaterial * BCond1 = material->CreateBC(material, fmatBCbott, fdirichlet, val1, val2);
-    TPZMaterial * BCond2 = material->CreateBC(material, fmatBCtop, fdirichlet, val1, val2);
-    TPZMaterial * BCond3 = material->CreateBC(material, fmatBCright, fdirichlet, val1, val2);
-    TPZMaterial * BCond4 = material->CreateBC(material, fmatBCleft, fdirichlet, val1, val2);
+    val1(1,1) = 1.e6;
+    TPZMaterial * BCond1 = material->CreateBC(material, fmatBCbott, fmixed, val1, val2);
+    val1.Zero();
+    val2(1,0)=10.;
+    TPZMaterial * BCond2 = material->CreateBC(material, fmatBCtop, fneumann, val1, val2);
+    val2.Zero();
+    val2(1,0)=0.;
+    val1(0,0) = 1.e6;
+    TPZMaterial * BCond3 = material->CreateBC(material, fmatBCright, fmixed, val1, val2);
+    val1.Zero();
+    val2(0,0)=0.;
+    TPZMaterial * BCond4 = material->CreateBC(material, fmatBCleft, fneumann, val1, val2);
     
     cmesh->InsertMaterialObject(BCond1);
     cmesh->InsertMaterialObject(BCond2);
@@ -466,11 +498,11 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     
   
     //Material Lagrange nas interfaces
-    TPZLagrangeMultiplier *matInterLeft = new TPZLagrangeMultiplier(fmatInterfaceLeft, fdim, nstate);
+    TPZStiffFracture *matInterLeft = new TPZStiffFracture(fmatInterfaceLeft, fdim, nstate);
     matInterLeft->SetMultiplier(-1);
     cmesh->InsertMaterialObject(matInterLeft);
 
-    TPZLagrangeMultiplier *matInterRight = new TPZLagrangeMultiplier(fmatInterfaceRight, fdim, nstate);
+    TPZStiffFracture *matInterRight = new TPZStiffFracture(fmatInterfaceRight, fdim, nstate);
     matInterRight->SetMultiplier(1);
     cmesh->InsertMaterialObject(matInterRight);
     
@@ -856,7 +888,7 @@ void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int
         TPZFractureNeighborData fracture(cmesh.Reference(),fracture_ids[i_f],boundaries_ids);
         fracture.OpenFracture(&cmesh); // (ok)
         fracture.SetDiscontinuosFrac(&cmesh); // (ok)
-        fracture.SetInterfaces(&cmesh, fmatInterfaceLeft, fmatInterfaceRight);
+       fracture.SetInterfaces(&cmesh, fmatInterfaceLeft, fmatInterfaceRight);
         
         std::ofstream filecE("CmeshWithFrac.txt"); //Impressão da malha computacional da velocidade (formato txt)
         cmesh.Print(filecE);

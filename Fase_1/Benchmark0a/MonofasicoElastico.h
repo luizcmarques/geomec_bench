@@ -89,8 +89,9 @@ private:
     int fmatPoint;
     
     //Condições de contorno do problema
-    int fdirichlet;
-    int fneumann;
+    int fdirichlet = 0;
+    int fneumann = 1;
+    int fmixed = 2;
     int fpenetration;
     int fpointtype;
     int fdirichletPress;

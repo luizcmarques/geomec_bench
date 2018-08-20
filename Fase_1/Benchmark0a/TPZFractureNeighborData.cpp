@@ -438,9 +438,9 @@ void TPZFractureNeighborData::ClassifyNeighboursofPivots(){
 //        int64_t iel = *it;
 //        m_geometry->Element(iel)->SetMaterialId(right_id);
 //    }
-    
-    std::ofstream filegvtk("Geometry_labels.vtk"); //Impressão da malha geométrica (formato vtk)
-    TPZVTKGeoMesh::PrintGMeshVTK(m_geometry, filegvtk,true);
+//
+//    std::ofstream filegvtk("Geometry_labels.vtk"); //Impressão da malha geométrica (formato vtk)
+//    TPZVTKGeoMesh::PrintGMeshVTK(m_geometry, filegvtk,true);
     
 }
 
@@ -459,6 +459,10 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
         
         // Filtering elements by fracture material identifier
         TPZGeoEl *gel = m_geometry->Element(ifrac);
+        
+        if (gel->HasSubElement()) {
+            continue;
+        }
         
         unsigned int n_sides = gel->NSides();
         for (unsigned int i_side = 0; i_side < n_sides; i_side++) {
@@ -497,6 +501,10 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
         // Filtering elements by fracture material identifier
         TPZGeoEl *gel = m_geometry->Element(ifrac);
         
+        if (gel->HasSubElement()) {
+            continue;
+        }
+        
         unsigned int n_corner_sides = gel->NSides();
         for (unsigned int i_side = 0; i_side < n_corner_sides; i_side++) {
             
@@ -524,6 +532,10 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
                 TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement *>(gel_neighbor->Reference());
                 if(!intel) continue;
                 int64_t conindex = intel->ConnectIndex(all_neighbors[i_neighbor].Side());
+                if(connectmap_to_be_duplicated.find(conindex) == connectmap_to_be_duplicated.end())
+                {
+                    continue;
+                }
                 int64_t newindex = connectmap_to_be_duplicated[conindex];
                 intel->SetConnectIndex(all_neighbors[i_neighbor].Side(), newindex);
             }            
@@ -554,6 +566,10 @@ void TPZFractureNeighborData::SetDiscontinuosFrac(TPZCompMesh *cmesh){
             
         // Filtering elements by fracture material identifier
         TPZGeoEl *gel = m_geometry->Element(ifrac);
+        
+        if (gel->HasSubElement()) {
+            continue;
+        }
         
         int64_t index;
         cmesh->CreateCompEl(gel, index);
@@ -591,6 +607,7 @@ void TPZFractureNeighborData::SetInterfaces(TPZCompMesh *cmesh, int matInterface
     
     for (int iel = 0; iel < fracture_index.size(); iel++) {
         TPZGeoEl *gel = elvec[fracture_index[iel]];
+        
         const int gelMatId = gel->MaterialId();
         if (gelMatId != fracture_id)
             continue;
