@@ -77,21 +77,21 @@ MonofasicoElastico::MonofasicoElastico()
     
     //Materiais das condições de contorno
     fmatBCbott=2;
-    fmatBCtop=3;
-    fmatBCright=4;
+    fmatBCright=3;
+    fmatBCtop=4;
     fmatBCleft=5;
     
     //Número de fraturas do problema:
-    fnFrac = 1;
+    fnFrac = 23;
     
     fmatFrac.resize(fnFrac);
     fmatPointLeft.resize(fnFrac);
     fmatPointRight.resize(fnFrac);
     
     for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
-        fmatFrac[i_frac] = 6+3*i_frac;
-        fmatPointLeft[i_frac] = 7+3*i_frac;
-        fmatPointRight[i_frac] = 8+3*i_frac;
+        fmatFrac[i_frac] = 6+i_frac;
+     //   fmatPointLeft[i_frac] = 7+3*i_frac;
+     //   fmatPointRight[i_frac] = 8+3*i_frac;
     }
     
     //Material do elemento de interface
@@ -123,7 +123,7 @@ MonofasicoElastico::MonofasicoElastico()
     fmixedFreeXYdirich = 500;
     
     ftheta=-1;
-    fEyoung = 0.;
+    fEyoung = 1.;
     fpoisson = 0.;
     falpha = 0.;
     fSe = 0.;
@@ -152,8 +152,8 @@ void MonofasicoElastico::Run(int pOrder)
     HDivPiola = 1;
     
     TPZMaterial::gBigNumber = 1.e16;
-    REAL Eyoung = 3.e6;
-    REAL poisson = 0.2;
+    REAL Eyoung = 1;
+    REAL poisson = 0.;
     
     REAL rockrho = 0.;
     REAL gravity = 0.;
@@ -178,7 +178,7 @@ void MonofasicoElastico::Run(int pOrder)
     
     TPZGeoMesh *gmesh = CreateGMesh(); //Função para criar a malha geometrica
    
-    int n_div = 3;
+    int n_div = 0;
     
     UniformRef(gmesh,n_div);
     
@@ -198,15 +198,16 @@ void MonofasicoElastico::Run(int pOrder)
     cmesh_E->Print(filecEbf);
     
     std::vector<int> fracture_ids;
-    for (int i_frac=0; i_frac<fnFrac; i_frac++) {
+    for (int i_frac=0; i_frac< fnFrac; i_frac++) {
         fracture_ids.push_back(fmatFrac[i_frac]);
     }
             
     BreakH1Connectivity(*cmesh_E, fracture_ids); // Insert new connects to represent normal fluxes
-    
-    std::ofstream filecE("MalhaC_E.txt"); //Impressão da malha computacional da velocidade (formato txt)
-    cmesh_E->Print(filecE);
-    
+    cmesh_E->ComputeNodElCon();
+    {
+        std::ofstream filecE("MalhaC_E.txt"); //Impressão da malha computacional da velocidade (formato txt)
+        cmesh_E->Print(filecE);
+    }
     TPZManVector<TPZCompMesh *, 3> meshvector(1);
     meshvector[0] = cmesh_E;
     std::ofstream fileg1("MalhaGeo2.txt"); //Impressão da malha geométrica (formato txt)
@@ -215,12 +216,65 @@ void MonofasicoElastico::Run(int pOrder)
     TPZVTKGeoMesh::PrintGMeshVTK(gmesh, filegvtk2,true);
 
     //Resolução Analysis
-    bool optimizeBandwidth = false;
+    bool optimizeBandwidth = true;
     TPZAnalysis an(cmesh_E,optimizeBandwidth);
-    TPZFMatrix<STATE> Initialsolution = an.Solution();
+    TPZSymetricSpStructMatrix matskl(cmesh_E);
+    int numthreads = 0;
+    matskl.SetNumThreads(numthreads);
+  //  TPZFMatrix<STATE> Initialsolution = an.Solution();
+    an.SetStructuralMatrix(matskl);
+    TPZStepSolver<STATE> step;
+    step.SetDirect(ELDLt);
+    an.SetSolver(step);
     an.Assemble();
+    
+#ifdef PZDEBUG
+    //Imprimir Matriz de rigidez Global:
+        std::ofstream filestiff("stiffness.txt");
+//        an.Solver().Matrix()->Print("K1 = ",filestiff,EMathematicaInput);
+        
+        std::ofstream filerhs("rhs.txt");
+//        an.Rhs().Print("Rhs = ",filerhs,EMathematicaInput);
+#endif
+    
     an.Solve();
 
+//    TPZFMatrix<STATE> rhs(1,0.);
+//    int64_t nel = cmesh_E->NElements();
+//    for (int64_t el=0; el<nel; el++) {
+//        TPZCompEl *cel = cmesh_E->Element(el);
+//        TPZGeoEl *gel = cel->Reference();
+//        int ncorner=gel->NCornerNodes();
+//        if (gel->Dimension()!=2) {
+//            continue;
+//        }
+//
+//        int ncon = cel->NConnects();
+//        for (int icon=0; icon< ncorner ; icon++) {
+//            TPZManVector<REAL,3> coord(3,0.);
+//
+//            gel->Node(icon).GetCoordinates(coord);
+//            int64_t cindex = cel->ConnectIndex(icon);
+//            TPZManVector<STATE> sol;
+//            int64_t seqnum = cmesh_E->ConnectVec()[cindex].SequenceNumber();
+//            cmesh_E->Block()(seqnum,0,1,0)=10.*coord[1];
+//        }
+//
+//
+//        TPZManVector<REAL> xcenter(3,0.);
+//        // TPZGeoEl *gel = cel->Reference();
+//        TPZManVector<REAL,3> xicenter(gel->Dimension(),0.);
+//        gel->CenterPoint(gel->NSides()-1, xicenter);
+//        gel->X(xicenter,xcenter);
+//
+//    }
+    
+//    an.Solution()=cmesh_E->Solution();
+//
+//    std::ofstream filesolforced("uforced.txt");
+//    an.Solution().Print("uforced = ",filesolforced,EMathematicaInput);
+    
+    
     //Pós-processamento (paraview):
     
     std::string plotfile("Benchmark_0a_PoroElast.vtk");
@@ -236,7 +290,11 @@ void MonofasicoElastico::Run(int pOrder)
     an.PostProcess(postProcessResolution,dim);
     
     std::cout << "FINISHED!" << std::endl;
-    
+    {
+        std::ofstream filecE("MalhaC_E.txt"); //Impressão da malha computacional da velocidade (formato txt)
+        cmesh_E->Print(filecE);
+    }
+
 }
 
 void MonofasicoElastico::UniformRef(TPZGeoMesh * gmesh, int n_div){
@@ -357,7 +415,7 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBenchConnectsVerify.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBenchP21p90.msh";
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
@@ -369,6 +427,7 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
     Geometry.fPZMaterialId[1]["top"] = fmatBCtop;
     Geometry.fPZMaterialId[1]["left"] = fmatBCleft;
     Geometry.fPZMaterialId[1]["frac"] = fmatFrac[0];
+    Geometry.fPZMaterialId[1]["frac2"] = fmatFrac[1];
     Geometry.fPZMaterialId[2]["Omega"] = fmatID;
     gmesh = Geometry.GeometricGmshMesh(grid);
     
@@ -386,48 +445,55 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
 }
 
 void MonofasicoElastico::Sol_exact(const TPZVec<REAL> &ptx, TPZVec<STATE> &sol, TPZFMatrix<STATE> &deriv){
-    
-    bool sol_dimensionless=true;
-    
-    //REAL x = ptx[0];
-    REAL x = ptx[1];
-    
-    REAL pini = 1000.;
-    REAL lamb = 8333.33;
-    REAL mi = 12500.0;
-    REAL H=1.;
-    REAL tp = ftimeatual;
-    int in;
-    REAL uD = 0.0, sigD=0.;
-    REAL sumuD = 0.0, sumsigD = 0.;
-    
-    REAL M =0.;
-    REAL PI = atan(1.)*4.;
-    
+
+    REAL y = ptx[1];
     sol.Resize(2, 0.);// ux, uy;
+    
+    sol[1] = 10.*y;
     deriv.Resize(2,2);//sigx, sigxy, sigyx, sigy
     deriv(0,0) = deriv(0,1) = deriv(1,0) = deriv(1,1) = 0.;
     
-    
-    REAL tD = tp;//(lamb+2.*mi)*perm*tp/(visc*H*H);
-    REAL xD = fabs(1.-x)/H;
-    for (in =999; in >= 0; in--) {
-        
-        M = PI*(2.*in+1.)/2.;
-        sumuD += (2./(M*M))*cos(M*xD)*exp(-1.*M*M*tD);
-        sumsigD += (2./M)*sin(M*xD)*exp(-1.*M*M*tD);
-    }
-    
-    uD = (H/H - xD) - sumuD;
-    sigD = -1. + sumsigD;
-    
-    if(sol_dimensionless==true){
-        sol[1] = (-1.)*uD;
-        deriv(1,1) = sigD;
-    }else{
-        sol[1] = (-1.)*uD*(pini*H)/(lamb+2.*mi);
-        deriv(1,1) = (sigD)*pini;
-    }
+//    bool sol_dimensionless=true;
+//
+//    //REAL x = ptx[0];
+//    REAL x = ptx[1];
+//
+//    REAL pini = 1000.;
+//    REAL lamb = 8333.33;
+//    REAL mi = 12500.0;
+//    REAL H=1.;
+//    REAL tp = ftimeatual;
+//    int in;
+//    REAL uD = 0.0, sigD=0.;
+//    REAL sumuD = 0.0, sumsigD = 0.;
+//
+//    REAL M =0.;
+//    REAL PI = atan(1.)*4.;
+//
+//    sol.Resize(2, 0.);// ux, uy;
+//    deriv.Resize(2,2);//sigx, sigxy, sigyx, sigy
+//    deriv(0,0) = deriv(0,1) = deriv(1,0) = deriv(1,1) = 0.;
+//
+//
+//    REAL tD = tp;//(lamb+2.*mi)*perm*tp/(visc*H*H);
+//    REAL xD = fabs(1.-x)/H;
+//    for (in =999; in >= 0; in--) {
+//
+//        M = PI*(2.*in+1.)/2.;
+//        sumuD += (2./(M*M))*cos(M*xD)*exp(-1.*M*M*tD);
+//        sumsigD += (2./M)*sin(M*xD)*exp(-1.*M*M*tD);
+//    }
+//
+//    uD = (H/H - xD) - sumuD;
+//    sigD = -1. + sumsigD;
+//
+//    if(sol_dimensionless==true){
+//        sol[1] = (-1.)*uD;
+//        deriv(1,1) = sigD;
+//    }else{
+//        sol[1] = (-1.)*uD*(pini*H)/(lamb+2.*mi);
+//        deriv(1,1) = (sigD)*pini;
+//    }
     
 }
 
@@ -464,7 +530,7 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     val1(1,1) = 1.e6;
     TPZMaterial * BCond1 = material->CreateBC(material, fmatBCbott, fmixed, val1, val2);
     val1.Zero();
-    val2(1,0)=10.;
+    val2(1,0)=1.;
     TPZMaterial * BCond2 = material->CreateBC(material, fmatBCtop, fneumann, val1, val2);
     val2.Zero();
     val2(1,0)=0.;
@@ -521,7 +587,7 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     matids.insert(fmatBCright);
     matids.insert(fmatBCtop);
     matids.insert(fmatBCleft);
-    matids.insert(fmatFluxWrap);
+//    matids.insert(fmatFluxWrap);
     
 //    cmesh->AutoBuild(matids);
 //    gmesh->ResetReference();
@@ -888,7 +954,7 @@ void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int
         TPZFractureNeighborData fracture(cmesh.Reference(),fracture_ids[i_f],boundaries_ids);
         fracture.OpenFracture(&cmesh); // (ok)
         fracture.SetDiscontinuosFrac(&cmesh); // (ok)
-       fracture.SetInterfaces(&cmesh, fmatInterfaceLeft, fmatInterfaceRight);
+        fracture.SetInterfaces(&cmesh, fmatInterfaceLeft, fmatInterfaceRight);
         
         std::ofstream filecE("CmeshWithFrac.txt"); //Impressão da malha computacional da velocidade (formato txt)
         cmesh.Print(filecE);

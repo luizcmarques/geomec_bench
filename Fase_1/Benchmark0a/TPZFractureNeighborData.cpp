@@ -148,9 +148,9 @@ void TPZFractureNeighborData::BuildPivotDataStructure(){
                 
             }
             
-            bool is_boundary_neighbour_Q = (d_minus_bc_neighbors_counter != 0 && has_point_neighbor_Q);
-            bool is_the_end_of_fractrue_Q = d_minus_same_fracture_neighbors_counter == 0 && has_point_neighbor_Q;
-            bool is_internal_side_Q = !is_the_end_of_fractrue_Q;
+            bool is_boundary_neighbour_Q = (d_minus_bc_neighbors_counter != 0);
+            bool is_the_end_of_fractrue_Q = d_minus_same_fracture_neighbors_counter == 0 ;
+            bool is_internal_side_Q = !is_the_end_of_fractrue_Q || d_minus_same_fracture_neighbors_counter != 0;
             
             bool is_pivot_Q = (is_boundary_neighbour_Q && is_the_end_of_fractrue_Q) || is_internal_side_Q;
             
@@ -219,6 +219,11 @@ std::set<int64_t> TPZFractureNeighborData::PivotNeighbours(TPZGeoElSide pivotsid
             continue;
         }
         if(all_neighbors[i].Element()->Dimension() == m_geometry->Dimension()){
+            neigh_indexes.insert(all_neighbors[i].Element()->Index());
+        }
+        int matid = all_neighbors[i].Element()->MaterialId();
+        if(m_boundaries_material_ids.find(matid) != m_boundaries_material_ids.end())
+        {
             neigh_indexes.insert(all_neighbors[i].Element()->Index());
         }
         
@@ -301,8 +306,9 @@ int64_t TPZFractureNeighborData::FractureNeighbourIndex(TPZGeoElSide gelside){
 bool TPZFractureNeighborData::HasLeftIndexNeighbour(int64_t gel_index){
     
     TPZGeoEl * gel = m_geometry->Element(gel_index);
+    int meshdim = m_geometry->Dimension();
     unsigned int n_corner_sides = gel->NCornerNodes();
-    unsigned int gel_candidate_side = gel->NSides() - 1;
+    unsigned int gel_candidate_side = gel->NSides();
     
     if (gel->HasSubElement() == 1) {
         return true;
@@ -315,6 +321,7 @@ bool TPZFractureNeighborData::HasLeftIndexNeighbour(int64_t gel_index){
     for(int side=n_corner_sides; side<gel_candidate_side; side++)
     {
         TPZGeoElSide gelside(gel,side);
+        if(gelside.Dimension() != meshdim-1) continue;
         if (FractureNeighbourIndex(gelside) != -1) {
             continue;
         }
@@ -336,8 +343,8 @@ bool TPZFractureNeighborData::HasRightIndexNeighbour(int64_t gel_index){
     
     TPZGeoEl * gel = m_geometry->Element(gel_index);
     unsigned int n_corner_sides = gel->NCornerNodes();
-    unsigned int gel_candidate_side = gel->NSides() - 1;
-    
+    unsigned int gel_candidate_side = gel->NSides() ;
+    int meshdim = m_geometry->Dimension();
     if (gel->HasSubElement() == 1) {
         return true;
     }
@@ -349,6 +356,7 @@ bool TPZFractureNeighborData::HasRightIndexNeighbour(int64_t gel_index){
     for(int side=n_corner_sides; side<gel_candidate_side; side++)
     {
         TPZGeoElSide gelside(gel,side);
+        if(gelside.Dimension() != meshdim-1) continue;
         if (FractureNeighbourIndex(gelside) != -1) {
             continue;
         }
@@ -413,6 +421,7 @@ void TPZFractureNeighborData::ClassifyNeighboursofPivots(){
     while (pivots.size()) {
         std::set<TPZGeoElSide> to_be_deleted;
         for (auto pivot: pivots) {
+            // return true if their is at least one element neighbour that is classified
             bool has_classified_neighbor_Q = HasClassifiedNeighbour(pivot);
             if (has_classified_neighbor_Q) {
                 std::set<int64_t> neighbours =  PivotNeighbours(pivot);
@@ -449,6 +458,7 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
     
     TPZGeoMesh *gmesh = cmesh->Reference();
     gmesh->ResetReference();
+    int meshdim = gmesh->Dimension();
     cmesh->LoadReferences();
     std::map<int64_t,int64_t> connectmap_to_be_duplicated;
     std::set<int64_t> geonodes;
@@ -481,8 +491,21 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
             unsigned int n_neighbors = all_neighbors.size();
             for (unsigned int i_neighbor = 0; i_neighbor < n_neighbors; i_neighbor++) {
                 TPZGeoEl * gel_neighbor = all_neighbors[i_neighbor].Element();
+//                if(gel_neighbor->Dimension() != meshdim) continue;
                 TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement *>(gel_neighbor->Reference());
                 if(!intel) continue;
+                
+                bool is_not_neigh_bound = m_boundaries_material_ids.find(gel_neighbor->MaterialId()) == m_boundaries_material_ids.end();
+                
+                if (is_not_neigh_bound && gel_neighbor->Dimension() != meshdim) {
+                    continue;
+                }
+                
+//                int neigh_side = all_neighbors[i_neighbor].Side();
+//                int nconnec = intel->NConnects();
+//                if (nconnec==1) { //aquipapap
+//                    continue;
+//                }
                 int64_t conindex = intel->ConnectIndex(all_neighbors[i_neighbor].Side());
                 connectmap_to_be_duplicated[conindex] = -1;
             }

@@ -230,109 +230,109 @@ pr = 1;
 
   Physical Surface("Omega") = {1};
   Physical Line("bottom") = {l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11,l12,l13,l14,l15,l16,l17,l18,l19,l20,l21};
-  Physical Line("top") = {l25,l26,l27,l28,l29,l30,l31,l32,l33,l34,l35,l36,l37,l38};
   Physical Line("right") = {l22,l23};
+  Physical Line("top") = {l24,l25,l26,l27,l28,l29,l30,l31,l32,l33,l34,l35,l36,l37,l38};
   Physical Line("left") = {l39,l40,l41};
   
   Physical Line("f1") = {f1};
-  Physical Point("P5") = {p5};
-  Physical Point("P6") = {p6};
+//  Physical Point("P5") = {p5};
+//  Physical Point("P6") = {p6};
 
   Physical Line("f2") = {f2};
-  Physical Point("P7") = {p7};
-  Physical Point("P8") = {p8};
+//  Physical Point("P7") = {p7};
+//  Physical Point("P8") = {p8};
 
   Physical Line("f3") = {f3};
-  Physical Point("P9") = {p9};
-  Physical Point("P10") = {p10};
+//  Physical Point("P9") = {p9};
+//  Physical Point("P10") = {p10};
 
   Physical Line("f4") = {f4};
-  Physical Point("P11") = {p11};
-  Physical Point("P12") = {p12};
+//  Physical Point("P11") = {p11};
+//  Physical Point("P12") = {p12};
 
   Physical Line("f5") = {f5};
-  Physical Point("P13") = {p13};
-  Physical Point("P14") = {p14};
+//  Physical Point("P13") = {p13};
+//  Physical Point("P14") = {p14};
 
   Physical Line("f6") = {f6};
-  Physical Point("P15") = {p15};
-  Physical Point("P16") = {p16};
+//  Physical Point("P15") = {p15};
+//  Physical Point("P16") = {p16};
 
   Physical Line("f7") = {f7};
-  Physical Point("P17") = {p17};
-  Physical Point("P18") = {p18};
+//  Physical Point("P17") = {p17};
+//  Physical Point("P18") = {p18};
 
   Physical Line("f8") = {f8};
-  Physical Point("P19") = {p19};
-  Physical Point("P20") = {p20};
+//  Physical Point("P19") = {p19};
+//  Physical Point("P20") = {p20};
 
   Physical Line("f9") = {f9};
-  Physical Point("P21") = {p21};
-  Physical Point("P22") = {p22};
+//  Physical Point("P21") = {p21};
+//  Physical Point("P22") = {p22};
 
   Physical Line("f10") = {f10};
-  Physical Point("P23") = {p23};
-  Physical Point("P24") = {p24};
+//  Physical Point("P23") = {p23};
+//  Physical Point("P24") = {p24};
 
   Physical Line("f11") = {f11};
-  Physical Point("P25") = {p25};
-  Physical Point("P26") = {p26};
+//  Physical Point("P25") = {p25};
+//  Physical Point("P26") = {p26};
 
   Physical Line("f12") = {f12};
-  Physical Point("P27") = {p27};
-  Physical Point("P28") = {p28};
+//  Physical Point("P27") = {p27};
+//  Physical Point("P28") = {p28};
 
   Physical Line("f13") = {f13};
-  Physical Point("P29") = {p29};
-  Physical Point("P30") = {p30};
+//  Physical Point("P29") = {p29};
+//  Physical Point("P30") = {p30};
 
   Physical Line("f14") = {f14};
-  Physical Point("P31") = {p31};
-  Physical Point("P32") = {p32};
+//  Physical Point("P31") = {p31};
+//  Physical Point("P32") = {p32};
 
-  Physical Line("f15") = {f15a};      
-  Physical Point("P33") = {p33};
-  Physical Point("P100") = {p100};
+  Physical Line("f15") = {f15a,f15b};      
+//  Physical Point("P33") = {p33};
+//  Physical Point("P100") = {p100};
 
-  Physical Line("f15b") = {f15b};      
-  Physical Point("P100a") = {p100};
-  Physical Point("P34") = {p34};
+//  Physical Line("f15") = {f15b};      
+//  Physical Point("P100a") = {p100};
+//  Physical Point("P34") = {p34};
 
   Physical Line("f16") = {f16};
-  Physical Point("P35") = {p35};
-  Physical Point("P36") = {p36};
+//  Physical Point("P35") = {p35};
+//  Physical Point("P36") = {p36};
 
   Physical Line("f17") = {f17};
-  Physical Point("P37") = {p37};
-  Physical Point("P38") = {p38};
+//  Physical Point("P37") = {p37};
+//  Physical Point("P38") = {p38};
 
   Physical Line("f18") = {f18};
-  Physical Point("P39") = {p39};
-  Physical Point("P40") = {p40};
+//  Physical Point("P39") = {p39};
+//  Physical Point("P40") = {p40};
 
   Physical Line("f19") = {f19};      
-  Physical Point("P41") = {p41};
-  Physical Point("P42") = {p42};
+//  Physical Point("P41") = {p41};
+//  Physical Point("P42") = {p42};
 
   Physical Line("f20") = {f20};
-  Physical Point("P43") = {p43};
-  Physical Point("P44") = {p44};
+//  Physical Point("P43") = {p43};
+//  Physical Point("P44") = {p44};
 
-  Physical Line("f21") = {f21a};
-  Physical Point("P45") = {p45};
-  Physical Point("P100b") = {p100};
+  Physical Line("f21") = {f21a,f21b};
+//  Physical Point("P45") = {p45};
+//  Physical Point("P100b") = {p100};
 
-  Physical Line("f21b") = {f21b};
-  Physical Point("P100c") = {p100};
-  Physical Point("P46") = {p46};
+//  Physical Line("f21") = {f21b};
+//  Physical Point("P100c") = {p100};
+//  Physical Point("P46") = {p46};
 
   Physical Line("f22") = {f22};      
-  Physical Point("P47") = {p47};
-  Physical Point("P48") = {p48};
+//  Physical Point("P47") = {p47};
+//  Physical Point("P48") = {p48};
 
   Physical Line("f23") = {f23};      
-  Physical Point("P49") = {p49};
-  Physical Point("P50") = {p50};
+//  Physical Point("P49") = {p49};
+//  Physical Point("P50") = {p50};
 
   Coherence Mesh;
 

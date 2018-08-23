@@ -17,10 +17,10 @@ h = 10;
 L = 10;
 Lf = 10;
 
-n_bc = 2;
-nx = 3;
-ny = 2;
-n_f[] = {2,4};
+n_bc = 1;
+nx = 1;
+ny = 1;
+n_f[] = {1,1};
 pr = 1.0;
 
   // Points
@@ -129,7 +129,7 @@ pr = 1.0;
   Physical Line("bc_bottom") = {l1};
   Physical Line("bc_right") = {l2};
   Physical Line("bc_top") = {l3};
-  Physical Line("bc_left") = {l4};
+  Physical Line("bc_left") = {l4,l5};
   
   Physical Line("frac_1") = {f1[]};
   Physical Point("frac_1_p1") = {f1points[0]};
