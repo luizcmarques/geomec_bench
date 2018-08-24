@@ -82,8 +82,8 @@ pr = 1;
   Physical Line("right") = {2,3};
   Physical Line("left") = {5,6};
   Physical Line("frac") = {7};
-  Physical Point("PointLeft") = {5};
-  Physical Point("PointRight") = {6};
+  //Physical Point("PointLeft") = {5};
+  //Physical Point("PointRight") = {6};
   
   //Physical Line("holes") = {holes[]};  
   //Physical Surface("interface") = {23};

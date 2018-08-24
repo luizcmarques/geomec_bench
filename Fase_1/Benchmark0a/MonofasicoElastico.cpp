@@ -82,7 +82,7 @@ MonofasicoElastico::MonofasicoElastico()
     fmatBCleft=5;
     
     //Número de fraturas do problema:
-    fnFrac = 23;
+    fnFrac = 1;
     
     fmatFrac.resize(fnFrac);
     fmatPointLeft.resize(fnFrac);
@@ -415,7 +415,7 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBenchP21p90.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench0b.msh";
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
@@ -956,8 +956,8 @@ void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int
         fracture.SetDiscontinuosFrac(&cmesh); // (ok)
         fracture.SetInterfaces(&cmesh, fmatInterfaceLeft, fmatInterfaceRight);
         
-        std::ofstream filecE("CmeshWithFrac.txt"); //Impressão da malha computacional da velocidade (formato txt)
-        cmesh.Print(filecE);
+  //      std::ofstream filecE("CmeshWithFrac.txt"); //Impressão da malha computacional da velocidade (formato txt)
+  //      cmesh.Print(filecE);
     }
     int aka  = 0;
 }

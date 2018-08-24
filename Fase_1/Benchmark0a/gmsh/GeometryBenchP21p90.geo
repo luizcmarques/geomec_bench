@@ -23,7 +23,7 @@ pr = 1;
 // Coordenadas dos pontos
 
   //Domínio Omega
-  p1 = newp;  Point(p1) = {0, 0, 0, 1e+22};
+  p1 = newp; Point(p1) = {0, 0, 0, 1e+22};
   p2 = newp; Point(p2) = {L, 0, 0, 1e+22};
   p3 = newp; Point(p3) = {L, h, 0, 1e+22};
   p4 = newp; Point(p4) = {0, h, 0, 1e+22};

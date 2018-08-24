@@ -1,6 +1,6 @@
 
 
-IsquadQ = 1;
+IsquadQ = 0;
  
 Mesh.ElementOrder = 1;
 Mesh.SecondOrderLinear = 0;
@@ -47,26 +47,25 @@ pr = 1.0;
 
 
 // Definição da superfície 
-  ll1 = newll; Line Loop(ll1) = {l1, l2, l3, l4};
-  s1 = news; Plane Surface(s1) = {ll1};
-  Line{f1} In Surface{s1};
-  Point{p5,p6} In Surface{s1};
+  Line Loop(1) = {l1, l2, l3, l4};
+  Plane Surface(1) = {1};
+  Line{f1} In Surface{1};
+ // Point{p5,p6} In Surface{s1};
 
  // Transfinite Surface {s1};
 
   If(IsquadQ)
-    Recombine Surface {s1};
+    Recombine Surface {1};
   EndIf
 
 
-  Physical Surface("Omega") = {s1};
+  Physical Surface("Omega") = {1};
   Physical Line("bottom") = {l1};
   Physical Line("right") = {l2};
   Physical Line("top") = {l3};
   Physical Line("left") = {l4};
+
   Physical Line("frac") = {f1};
-  Physical Point("PointLeft") = {p5};
-  Physical Point("PointRight") = {p6};
   
   Coherence Mesh;
 
