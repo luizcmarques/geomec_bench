@@ -14,8 +14,8 @@ L = 200;
 Lf = 200;
 
 n_bc = 2;
-nx = 20;
-ny = 4;
+nx = 12;
+ny = 2;
 pr = 1.0;
 
 // Coordenadas dos pontos
@@ -50,6 +50,7 @@ pr = 1.0;
   Line Loop(1) = {l1, l2, l3, l4};
   Plane Surface(1) = {1};
   Line{f1} In Surface{1};
+
  // Point{p5,p6} In Surface{s1};
 
  // Transfinite Surface {s1};

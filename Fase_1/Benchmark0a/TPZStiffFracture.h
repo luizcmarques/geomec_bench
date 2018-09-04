@@ -11,9 +11,12 @@
 #include <stdio.h>
 #include <iostream>
 #include "pzdiscgal.h"
+#include "TPZMatWithMem.h"
+#include "tpzautopointer.h"
+
 
 /// Material which implements a Lagrange Multiplier
-class TPZStiffFracture : public TPZDiscontinuousGalerkin
+class TPZStiffFracture : public TPZMatWithMem<TPZFMatrix<REAL>, TPZDiscontinuousGalerkin>
 {
     
     /// Number of state variables
@@ -24,23 +27,26 @@ class TPZStiffFracture : public TPZDiscontinuousGalerkin
     
     STATE fMultiplier;
     
+    /** @brief Data of the simulation */
+   // TPZAutoPointer<TPZFracData> fData;
+    
     public :
     /** @brief Simple constructor */
-    TPZStiffFracture() : TPZRegisterClassId(&TPZStiffFracture::ClassId),
-    TPZDiscontinuousGalerkin()
+    TPZStiffFracture() : TPZRegisterClassId(&TPZStiffFracture::ClassId), TPZMatWithMem<TPZFMatrix<REAL>,
+    TPZDiscontinuousGalerkin >()
     {
         
     }
     /** @brief Constructor with the index of the material object within the vector */
-    TPZStiffFracture(int nummat, int dimension, int nstate) : TPZRegisterClassId(&TPZStiffFracture::ClassId),
-    TPZDiscontinuousGalerkin(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.)
+    TPZStiffFracture(int nummat, int dimension, int nstate) : TPZRegisterClassId(&TPZStiffFracture::ClassId),TPZMatWithMem<TPZFMatrix<REAL>,
+    TPZDiscontinuousGalerkin>(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.)
     {
         
     }
     
     /** @brief Copy constructor */
-    TPZStiffFracture(const TPZStiffFracture &copy) : TPZRegisterClassId(&TPZStiffFracture::ClassId),
-    TPZDiscontinuousGalerkin(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
+    TPZStiffFracture(const TPZStiffFracture &copy) : TPZRegisterClassId(&TPZStiffFracture::ClassId),TPZMatWithMem<TPZFMatrix<REAL>,
+    TPZDiscontinuousGalerkin>(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
     {
         
     }
@@ -273,6 +279,14 @@ class TPZStiffFracture : public TPZDiscontinuousGalerkin
         PZError << "Method not implemented\n";
     }
     
+    
+    /** @brief Updates the leak off memory */
+    void UpdateMemory(TPZVec<TPZMaterialData> &datavec);
+    
+    /** @brief Updates the leak off memory */
+    void UpdateMemory(TPZMaterialData &data, TPZVec<TPZMaterialData> &datavec);
+    
+    
     /** @{
      * @name Save and Load methods
      */
@@ -284,6 +298,7 @@ public:
     
     /** @brief Saves the element data to a stream */
     virtual void Write(TPZStream &buf, int withclassid) const;
+    
     
     /** @brief Reads the element data from a stream */
     virtual void Read(TPZStream &buf, void *context);

@@ -82,7 +82,7 @@ MonofasicoElastico::MonofasicoElastico()
     fmatBCleft=5;
     
     //Número de fraturas do problema:
-    fnFrac = 1;
+    fnFrac = 30;
     
     fmatFrac.resize(fnFrac);
     fmatPointLeft.resize(fnFrac);
@@ -218,7 +218,8 @@ void MonofasicoElastico::Run(int pOrder)
     //Resolução Analysis
     bool optimizeBandwidth = true;
     TPZAnalysis an(cmesh_E,optimizeBandwidth);
-    TPZSymetricSpStructMatrix matskl(cmesh_E);
+    TPZSymetricSpStructMatrix matskl(cmesh_E); //Pardiso
+    //    TPZSkylineStructMatrix matskl(cmesh_E);
     int numthreads = 0;
     matskl.SetNumThreads(numthreads);
   //  TPZFMatrix<STATE> Initialsolution = an.Solution();
@@ -415,7 +416,7 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench0b.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBenchP21p90.msh";
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
