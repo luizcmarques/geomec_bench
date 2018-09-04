@@ -13,7 +13,7 @@
 #include "pzdiscgal.h"
 #include "TPZMatWithMem.h"
 #include "tpzautopointer.h"
-
+#include "TPZStiffFracMem.h"
 
 /// Material which implements a Lagrange Multiplier
 class TPZStiffFracture : public TPZMatWithMem<TPZFMatrix<REAL>, TPZDiscontinuousGalerkin>
@@ -28,7 +28,7 @@ class TPZStiffFracture : public TPZMatWithMem<TPZFMatrix<REAL>, TPZDiscontinuous
     STATE fMultiplier;
     
     /** @brief Data of the simulation */
-   // TPZAutoPointer<TPZFracData> fData;
+    TPZAutoPointer<TPZStiffFracMem> fData;
     
     public :
     /** @brief Simple constructor */

@@ -210,12 +210,27 @@ void TPZStiffFracture::UpdateMemory(TPZVec<TPZMaterialData> &datavec){
     const int intGlobPtIndex = datavec[0].intLocPtIndex;
     TPZFMatrix<REAL> Vl = this->MemItem(intGlobPtIndex);
     const STATE pfrac = datavec[1].sol[0][0];
-  //  const REAL deltaT = fData->TimeStep();
+    const REAL deltaT = fData->TimeStep();
+    REAL tStar = fData->FictitiousTime(Vl(0,0), pfrac);
+    REAL Vlnext = fData->VlFtau(pfrac, tStar + deltaT);
+    
+    Vl(0,0) = Vlnext;
+    this->MemItem(intGlobPtIndex) = Vl;
+    
 }
 
 /** @brief Updates the leak off memory */
 void TPZStiffFracture::UpdateMemory(TPZMaterialData &data, TPZVec<TPZMaterialData> &datavec){
+    const int intGlobPtIndex = data.intGlobPtIndex;
+    TPZFMatrix<REAL> Vl = this->MemItem(intGlobPtIndex);
+    const STATE pfrac = datavec[1].sol[0][0];
+    const REAL deltaT = fData->TimeStep();
     
+    REAL tStar = fData->FictitiousTime(Vl(0,0), pfrac);
+    REAL Vlnext = fData->VlFtau(pfrac, tStar + deltaT);
+    
+    Vl(0,0) = Vlnext;
+    this->MemItem(intGlobPtIndex) = Vl;
 }
 
 
