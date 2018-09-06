@@ -23,8 +23,13 @@
 #include "TPZMultiphysicsInterfaceEl.h"
 #include "pzmultiphysicselement.h"
 #include "TPZInterfaceEl.h"
-
+#include "TPZMatElastoPlastic.h"
+#include "TPZMatElastoPlastic2D.h"
+#include "TPZElasticCriterion.h"
+#include "pzporoelastoplasticmem.h"
+#include "pzcompelwithmem.h"
 #include "TPZStiffFracture.h"
+#include "pzelastoplasticanalysis.h"
 
 #include "pzelasmat.h"
 #include "pzinterpolationspace.h"
@@ -82,7 +87,7 @@ MonofasicoElastico::MonofasicoElastico()
     fmatBCleft=5;
     
     //Número de fraturas do problema:
-    fnFrac = 30;
+    fnFrac = 1;
     
     fmatFrac.resize(fnFrac);
     fmatPointLeft.resize(fnFrac);
@@ -148,6 +153,8 @@ void MonofasicoElastico::Run(int pOrder)
     InitializePZLOG();
 #endif
     //Dados do problema:
+    
+
     
     HDivPiola = 1;
     
@@ -416,7 +423,7 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBenchP21p90.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench.msh";
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
@@ -505,7 +512,8 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     TPZCompMesh * cmesh = new TPZCompMesh(gmesh);
     cmesh->SetDefaultOrder(pOrder);
     cmesh->SetDimModel(fdim);
-    cmesh->SetAllCreateFunctionsContinuous();
+    cmesh->ApproxSpace().SetAllCreateFunctionsContinuousWithMem();
+//    cmesh->SetAllCreateFunctionsContinuous();
     
     //Material volumétrico
     int nstate = 2;
@@ -513,9 +521,19 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     //REAL E = 0;
     //REAL poisson = 0;
     int planestress = -1;
-    TPZMaterial *material;
-    material = new TPZElasticityMaterial(fmatID, fEyoung, fpoisson, ffx, ffy, planestress);
+    TPZMatElastoPlastic2D<TPZElasticCriterion , TPZPoroElastoPlasticMem> *material;
+    //material = new TPZElasticityMaterial(fmatID, fEyoung, fpoisson, ffx, ffy, planestress);
+    material = new TPZMatElastoPlastic2D<TPZElasticCriterion , TPZPoroElastoPlasticMem> (fmatID , planestress);
+    TPZElasticCriterion obj ;
+    
+    TPZElasticResponse er;
+    er.SetUp(fEyoung,fpoisson);
+    obj.SetElasticResponse(er);
+    material->SetPlasticity(obj);
     cmesh->InsertMaterialObject(material);
+    
+//    TPZElastoPlasticAnalysis::SetAllCreateFunctionsWithMem(cmesh);
+    
     
     //Material Fraturas
     TPZMat1dLin *materialFrac;
