@@ -46,7 +46,7 @@
 #include "pzanalysis.h"
 #include "TPZParFrontStructMatrix.h"
 #include "TPZSpStructMatrix.h"
-
+#include "pzpostprocanalysis.h"
 #include "TPZFractureNeighborData.h"
 
 using namespace std;
@@ -163,6 +163,7 @@ public:
     void AddMultiphysicsInterfaces(TPZCompMesh &cmesh);
     
     bool insert_fractures_Q = true;
+    
     
 };
 

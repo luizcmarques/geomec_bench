@@ -65,7 +65,6 @@
 #include "TPZSSpStructMatrix.h"
 #include "TPZGmshReader.h"
 
-
 #define TRIANGLEMESH
 
 using namespace std;
@@ -285,25 +284,58 @@ void MonofasicoElastico::Run(int pOrder)
     
     //Pós-processamento (paraview):
     
-    std::string plotfile("Benchmark_0a_PoroElast.vtk");
-    TPZStack<std::string> scalnames, vecnames;
-    scalnames.Push("SigmaX");
-    scalnames.Push("SigmaY");
-    scalnames.Push("Pressure");
-    vecnames.Push("displacement");
+//    std::string plotfile("Benchmark_0a_PoroElast.vtk");
+//    TPZStack<std::string> scalnames, vecnames;
+//    scalnames.Push("SigmaX");
+//    scalnames.Push("SigmaY");
+//    scalnames.Push("Pressure");
+//    vecnames.Push("displacement");
     
-    int postProcessResolution = 0; //  keep low as possible
-    int dim = gmesh->Dimension();
-    an.DefineGraphMesh(dim,scalnames,vecnames,plotfile);
-    an.PostProcess(postProcessResolution,dim);
     
-    std::cout << "FINISHED!" << std::endl;
+    
+    TPZPostProcAnalysis post_an;
+    post_an.SetCompMesh(an.Mesh());
+
+    
+    TPZManVector<int,10> post_mat_id(1);
+    post_mat_id[0] = 1;
+    TPZManVector<std::string,10> var_names(4), vecnames(0);
+    var_names[0] = "XStress";
+    var_names[1] = "YStress";
+    var_names[2] = "DisplacementMemX";
+    var_names[3] = "DisplacementMemY";
+    post_an.SetPostProcessVariables(post_mat_id, var_names);
+    
     {
-        std::ofstream filecE("MalhaC_E.txt"); //Impressão da malha computacional da velocidade (formato txt)
-        cmesh_E->Print(filecE);
+        std::ofstream file("Malha_postproc.txt");
+        post_an.Mesh()->Print(file);
     }
+    
+    TPZFStructMatrix structmatrix(post_an.Mesh());
+    structmatrix.SetNumThreads(0);
+    post_an.SetStructuralMatrix(structmatrix);
+    post_an.TransferSolution();
+    
+    int dim = an.Mesh()->Dimension();
+    int div = 0; //  keep low as possible
+    std::string plotfile_post("Benchmark_0a_PoroElast.vtk");
+    post_an.DefineGraphMesh(dim,var_names,vecnames,plotfile_post);
+    post_an.PostProcess(div,dim);
+    
+    
+
+//    int dim = gmesh->Dimension();
+//    an.DefineGraphMesh(dim,scalnames,vecnames,plotfile);
+//    an.PostProcess(postProcessResolution,dim);
+//
+//    std::cout << "FINISHED!" << std::endl;
+//    {
+//        std::ofstream filecE("MalhaC_E.txt"); //Impressão da malha computacional da velocidade (formato txt)
+//        cmesh_E->Print(filecE);
+//    }
 
 }
+
 
 void MonofasicoElastico::UniformRef(TPZGeoMesh * gmesh, int n_div){
     for ( int ref = 0; ref < n_div; ref++ ){
@@ -513,7 +545,6 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     cmesh->SetDefaultOrder(pOrder);
     cmesh->SetDimModel(fdim);
     cmesh->ApproxSpace().SetAllCreateFunctionsContinuousWithMem();
-//    cmesh->SetAllCreateFunctionsContinuous();
     
     //Material volumétrico
     int nstate = 2;
@@ -531,9 +562,6 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     obj.SetElasticResponse(er);
     material->SetPlasticity(obj);
     cmesh->InsertMaterialObject(material);
-    
-//    TPZElastoPlasticAnalysis::SetAllCreateFunctionsWithMem(cmesh);
-    
     
     //Material Fraturas
     TPZMat1dLin *materialFrac;
