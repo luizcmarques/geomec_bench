@@ -158,8 +158,8 @@ void MonofasicoElastico::Run(int pOrder)
     HDivPiola = 1;
     
     TPZMaterial::gBigNumber = 1.e16;
-    REAL Eyoung = 1;
-    REAL poisson = 0.;
+    REAL Eyoung = 1.0;
+    REAL poisson = 0.0;
     
     REAL rockrho = 0.;
     REAL gravity = 0.;
@@ -243,55 +243,52 @@ void MonofasicoElastico::Run(int pOrder)
         std::ofstream filerhs("rhs.txt");
 //        an.Rhs().Print("Rhs = ",filerhs,EMathematicaInput);
 #endif
-    
     an.Solve();
-
-//    TPZFMatrix<STATE> rhs(1,0.);
-//    int64_t nel = cmesh_E->NElements();
-//    for (int64_t el=0; el<nel; el++) {
-//        TPZCompEl *cel = cmesh_E->Element(el);
-//        TPZGeoEl *gel = cel->Reference();
-//        int ncorner=gel->NCornerNodes();
-//        if (gel->Dimension()!=2) {
-//            continue;
-//        }
+    
+//    {
+//        //Pós-processamento standard (paraview):
 //
-//        int ncon = cel->NConnects();
-//        for (int icon=0; icon< ncorner ; icon++) {
-//            TPZManVector<REAL,3> coord(3,0.);
+//        std::string plotfile("Benchmark_0a_PoroElast_std.vtk");
+//        TPZStack<std::string> scalnames, vecnames;
+////        scalnames.Push("SigmaX");
+////        scalnames.Push("SigmaY");
+////        scalnames.Push("Pressure");
+//        vecnames.Push("Displacement");
 //
-//            gel->Node(icon).GetCoordinates(coord);
-//            int64_t cindex = cel->ConnectIndex(icon);
-//            TPZManVector<STATE> sol;
-//            int64_t seqnum = cmesh_E->ConnectVec()[cindex].SequenceNumber();
-//            cmesh_E->Block()(seqnum,0,1,0)=10.*coord[1];
-//        }
-//
-//
-//        TPZManVector<REAL> xcenter(3,0.);
-//        // TPZGeoEl *gel = cel->Reference();
-//        TPZManVector<REAL,3> xicenter(gel->Dimension(),0.);
-//        gel->CenterPoint(gel->NSides()-1, xicenter);
-//        gel->X(xicenter,xcenter);
-//
+//        int postProcessResolution = 0; //  keep low as possible
+//        int dim = gmesh->Dimension();
+//        an.DefineGraphMesh(dim,scalnames,vecnames,plotfile);
+//        an.PostProcess(postProcessResolution,dim);
 //    }
     
-//    an.Solution()=cmesh_E->Solution();
-//
-//    std::ofstream filesolforced("uforced.txt");
-//    an.Solution().Print("uforced = ",filesolforced,EMathematicaInput);
     
-    
-    //Pós-processamento (paraview):
-    
-//    std::string plotfile("Benchmark_0a_PoroElast.vtk");
-//    TPZStack<std::string> scalnames, vecnames;
-//    scalnames.Push("SigmaX");
-//    scalnames.Push("SigmaY");
-//    scalnames.Push("Pressure");
-//    vecnames.Push("displacement");
-    
-    
+    // Acepting solution just because the problem is linear
+    bool update_Q = true;
+    { // for each material id
+        int mat_id = 1;
+        TPZMaterial *mat = an.Mesh()->FindMaterial(mat_id);
+        if (!mat) {
+            DebugStop();
+        }
+        
+        // update mem
+        {
+            std::map<int, TPZMaterial *> & refMatVec = an.Mesh()->MaterialVec();
+            std::map<int, TPZMaterial * >::iterator mit;
+            
+            TPZMatWithMem<TPZPoroElastoPlasticMem> * pMatWithMem2; // define in file pzporous.h
+            
+            for(mit=refMatVec.begin(); mit!= refMatVec.end(); mit++)
+            {
+                pMatWithMem2 = dynamic_cast<TPZMatWithMem<TPZPoroElastoPlasticMem> *>( mit->second);
+                if(pMatWithMem2 != NULL)
+                {
+                    pMatWithMem2->SetUpdateMem(update_Q);
+                }
+            }
+        }
+        an.AssembleResidual();
+    }
     
     TPZPostProcAnalysis post_an;
     post_an.SetCompMesh(an.Mesh());
@@ -302,8 +299,10 @@ void MonofasicoElastico::Run(int pOrder)
     TPZManVector<std::string,10> var_names(4), vecnames(0);
     var_names[0] = "XStress";
     var_names[1] = "YStress";
-    var_names[2] = "DisplacementMemX";
-    var_names[3] = "DisplacementMemY";
+//    var_names[2] = "DisplacementMemX";
+//    var_names[3] = "DisplacementMemY";
+    var_names[2] = "DisplacementX";
+    var_names[3] = "DisplacementY";
     post_an.SetPostProcessVariables(post_mat_id, var_names);
     
     {
@@ -561,6 +560,9 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     er.SetUp(fEyoung,fpoisson);
     obj.SetElasticResponse(er);
     material->SetPlasticity(obj);
+    TPZManVector<REAL, 3> Force(3,0.);
+    Force[1]=0.0000000000000000000001; //Gravidade Aquipapapa
+    material->SetGravity(Force);
     cmesh->InsertMaterialObject(material);
     
     //Material Fraturas
@@ -577,10 +579,10 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     val1(1,1) = 1.e6;
     TPZMaterial * BCond1 = material->CreateBC(material, fmatBCbott, fmixed, val1, val2);
     val1.Zero();
-    val2(1,0)=1.;
+    val2(1,0)= 1.;
     TPZMaterial * BCond2 = material->CreateBC(material, fmatBCtop, fneumann, val1, val2);
     val2.Zero();
-    val2(1,0)=0.;
+    val2(1,0)= 0.;
     val1(0,0) = 1.e6;
     TPZMaterial * BCond3 = material->CreateBC(material, fmatBCright, fmixed, val1, val2);
     val1.Zero();

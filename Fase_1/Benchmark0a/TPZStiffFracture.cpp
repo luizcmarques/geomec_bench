@@ -202,7 +202,7 @@ void TPZStiffFracture::ContributeInterface(TPZMaterialData &data, TPZMaterialDat
  */
 void TPZStiffFracture::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ef)
 {
-    DebugStop();
+    return;
 }
 
 /** @brief Updates the leak off memory */
