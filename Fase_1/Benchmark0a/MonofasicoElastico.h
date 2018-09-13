@@ -131,6 +131,8 @@ public:
     
     ~MonofasicoElastico();
     
+    static void F_source(const TPZVec<REAL> &x, TPZVec<STATE> &f, TPZFMatrix<STATE>& gradu);
+    
     void StiffMatrixLoadVec(TPZPoroElasticMF2d *mymaterial, TPZCompMesh* mphysics, TPZAnalysis &an, TPZFMatrix<STATE> &matK1, TPZFMatrix<STATE> &fvec, int nthreads);
     
     TPZAutoPointer <TPZMatrix<STATE> > MassMatrix(TPZPoroElasticMF2d * mymaterial, TPZCompMesh* mphysics, int nthreads);
@@ -149,7 +151,7 @@ public:
     TPZCompMesh *CMesh_E(TPZGeoMesh *gmesh, int pOrder); // Malha computacional de elasticidade
     TPZCompMesh *CMesh_q(TPZGeoMesh *gmesh, int pOrder); // Malha computacional de fluxo
     TPZCompMesh *CMesh_p(TPZGeoMesh *gmesh, int pOrder); // Malha computacional de pressão
-    TPZCompMesh *CMesh_m(TPZGeoMesh *gmesh, int pOrder, TPZPoroElasticMF2d * &mymaterial); // Malha computacional multifísica
+    TPZCompMesh *CMesh_m(TPZGeoMesh *gmesh, int pOrder); // Malha computacional multifísica
     
     //solucao exata
     static void Sol_exact(const TPZVec<REAL> &x, TPZVec<STATE> &sol, TPZFMatrix<STATE> &dsol);
