@@ -218,7 +218,8 @@ public:
      */
     
     virtual void Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ef){
-        DebugStop();
+        TPZFMatrix<STATE> ek(ef.Rows(),ef.Rows());
+        Contribute(datavec, weight, ek, ef);
     }
     
     /**

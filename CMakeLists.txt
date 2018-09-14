@@ -102,6 +102,8 @@ if(WIN32)
 
 endif()
 
+include_directories(.)
+
 add_subdirectory(Fase_1/Benchmark0a)
 add_subdirectory(MHM_Frac)
 file(COPY DFN_data DESTINATION MHM_Frac)

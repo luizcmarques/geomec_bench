@@ -21,6 +21,7 @@ TPZSimulationData::TPZSimulationData()
     m_geometry_file     = "";
     m_vtk_file          = "";
     m_vtk_resolution    = 0;
+    m_volumetric_material_id.resize(0);
 }
 
 TPZSimulationData::~TPZSimulationData()
@@ -41,6 +42,7 @@ TPZSimulationData::TPZSimulationData(const TPZSimulationData & other)
     m_geometry_file                     = other.m_geometry_file;
     m_vtk_file                          = other.m_vtk_file;
     m_vtk_resolution                    = other.m_vtk_resolution;
+    m_volumetric_material_id            = other.m_volumetric_material_id;
 }
 
 TPZSimulationData & TPZSimulationData::operator=(const TPZSimulationData &other)
@@ -58,6 +60,7 @@ TPZSimulationData & TPZSimulationData::operator=(const TPZSimulationData &other)
         m_geometry_file                     = other.m_geometry_file;
         m_vtk_file                          = other.m_vtk_file;
         m_vtk_resolution                    = other.m_vtk_resolution;
+        m_volumetric_material_id            = other.m_volumetric_material_id;
     }
     return *this;
 }
@@ -78,6 +81,7 @@ void TPZSimulationData::Print()
     std::cout << " m_geometry_file = " << m_geometry_file << std::endl;
     std::cout << " m_vtk_file = " << m_vtk_file << std::endl;
     std::cout << " m_vtk_resolution = " << m_vtk_resolution << std::endl;
+    std::cout << " m_volumetric_material_id = " << &m_volumetric_material_id << std::endl;
     std::cout << std::endl;
     
 }

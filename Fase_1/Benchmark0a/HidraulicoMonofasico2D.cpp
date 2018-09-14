@@ -169,7 +169,37 @@ void HidraulicoMonofasico2D::Run(int pOrder)
     gmesh->Print(fileg1);
     
     
+    // Setting up the 
     
+    TPZSimulationData *simulation_data =  new TPZSimulationData;
+    simulation_data->Get_volumetric_material_id().push_back(fmatID);
+    simulation_data->Set_n_threads(0);
+    simulation_data->Set_epsilon_cor(0.001);
+    simulation_data->Set_epsilon_cor(0.001);
+    simulation_data->Set_n_iterations(1);
+    
+    TPZStack<std::string> scalnames, vecnames;
+    scalnames.Push("P");
+    vecnames.Push("V");
+    
+    bool mustOptimizeBandwidth = true;
+    TPZDarcyAnalysis * analysis = new TPZDarcyAnalysis;
+    analysis->SetCompMesh(cmesh_m, mustOptimizeBandwidth);
+    analysis->ConfigurateAnalysis(ELU, meshvector, simulation_data, scalnames);
+    analysis->Set_vec_var_names(vecnames);
+    
+    std::string plotfile("Benchmark_0a_DarcyTest.vtk");
+    analysis->ExecuteOneTimeStep();
+    analysis->PostProcessTimeStep(plotfile,true);
+    
+    if(finsert_fractures_Q) {
+        std::cout << "Postprocessing fracture" << std::endl;
+        Plot_over_fractures(cmesh_m);
+    }
+    
+    std::cout << "FINISHED!" << std::endl;
+    
+    return;
     
     //Resolvendo o Sistema:
     int numthreads = 0;
@@ -188,22 +218,11 @@ void HidraulicoMonofasico2D::Run(int pOrder)
     
     //Pós-processamento (paraview):
     
-    std::string plotfile("Benchmark_0a_DarcyTest.vtk");
-    TPZStack<std::string> scalnames, vecnames;
-    scalnames.Push("P");
-    vecnames.Push("V");
+
+
+
     
-    int postProcessResolution = 0; //  keep low as possible
-    int dim = gmesh->Dimension();
-    an.DefineGraphMesh(dim,scalnames,vecnames,plotfile);
-    an.PostProcess(postProcessResolution,dim);
-    
-    if(finsert_fractures_Q) {
-        std::cout << "Postprocessing fracture" << std::endl;
-        Plot_over_fractures(cmesh_m);
-    }
-    
-    std::cout << "FINISHED!" << std::endl;
+
     
 }
 
@@ -227,7 +246,7 @@ TPZGeoMesh *HidraulicoMonofasico2D::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     
     // @TODO:: Remove this hardcode
-//    std::string grid = BENCHMARK_SOURCE_DIR;
+//    std::string grid_o = BENCHMARK_SOURCE_DIR;
     std::string grid = "/Users/omar/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench.msh";
     
     TPZGmshReader Geometry;

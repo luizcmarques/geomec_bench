@@ -53,7 +53,7 @@ void TPZSegregatedAnalysisDFN::ApplyMemoryLink(){
     
 }
 
-void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_geo, DecomposeType decompose_res, TPZSimulationData * simulation_data,  TPZCompMesh * cmesh_geomechanics, TPZCompMesh * cmesh_reservoir, TPZManVector<TPZCompMesh * , 2> & mesh_vec){
+void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_geo, DecomposeType decompose_res, TPZSimulationData * simulation_data,  TPZCompMesh * cmesh_geomechanics, TPZCompMesh * cmesh_reservoir, TPZManVector<TPZCompMesh * , 2> & mesh_vec, TPZStack<std::string> & post_pro_var_res, TPZStack<std::string> & post_pro_var_geo){
     
     if (!simulation_data || !cmesh_geomechanics || !cmesh_reservoir) {
         DebugStop();
@@ -70,7 +70,7 @@ void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_geo, 
     // The Flux Simulator
     m_darcy_analysis = new TPZDarcyAnalysis;
     m_darcy_analysis->SetCompMesh(cmesh_reservoir,mustOptimizeBandwidth);
-    m_darcy_analysis->ConfigurateAnalysis(decompose_res, mesh_vec, m_simulation_data);
+    m_darcy_analysis->ConfigurateAnalysis(decompose_res, mesh_vec, m_simulation_data,post_pro_var_res);
     
     this->ApplyMemoryLink();
     

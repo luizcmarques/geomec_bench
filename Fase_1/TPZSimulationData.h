@@ -61,6 +61,9 @@ protected:
     /** @brief Number of vtk resolution during postprocessing */
     int m_vtk_resolution;
     
+    /** @brief Vector that storages only volumetric material identifiers (higher dimension elements) */
+    std::vector<int> m_volumetric_material_id;
+    
 public:
     
     
@@ -122,12 +125,12 @@ public:
     }
     
     /** @brief Set Newton iterations */
-    void Set_n_iteraions(int n_iterations){
+    void Set_n_iterations(int n_iterations){
         m_n_iterations = n_iterations;
     }
     
     /** @brief Get Newton iterations  */
-    REAL Get_n_iteraions(){
+    REAL Get_n_iterations(){
         return m_n_iterations;
     }
     
@@ -189,6 +192,16 @@ public:
     /** @brief Set number of vtk resolution during postprocessing */
     void Set_vtk_resolution(int vtk_resolution){
         m_vtk_resolution = vtk_resolution;
+    }
+    
+    /** @brief Get the vector that storages only volumetric material identifiers (higher dimension elements)  */
+    std::vector<int> & Get_volumetric_material_id(){
+        return m_volumetric_material_id;
+    }
+    
+    /** @brief Set the vector that storages only volumetric material identifiers (higher dimension elements) */
+    void Set_volumetric_material_id(std::vector<int> & volumetric_material_id){
+        m_volumetric_material_id = volumetric_material_id;
     }
 
 };

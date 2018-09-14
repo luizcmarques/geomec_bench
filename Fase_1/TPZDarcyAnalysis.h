@@ -47,8 +47,11 @@ private:
     /// Post-processor object
     TPZPostProcAnalysis * m_post_processor;
     
-    /// Variables being postprocessed
+    /// Variables being postprocessed as scalar
     TPZStack<std::string> m_var_names;
+    
+    /// Variables being postprocessed as vector on standard post-process
+    TPZStack<std::string> m_vec_var_names;
     
 public:
     
@@ -67,7 +70,7 @@ public:
     }
     
     /// Configurate the solver being used to compute the approximation
-    void ConfigurateAnalysis(DecomposeType decomposition, TPZManVector<TPZCompMesh * , 2> & mesh_vec,TPZSimulationData * simulation_data);
+    void ConfigurateAnalysis(DecomposeType decomposition, TPZManVector<TPZCompMesh * , 2> & mesh_vec, TPZSimulationData * simulation_data, TPZVec<std::string> & var_names);
     
     /// Execute a single newton iteration
     void ExecuteNewtonInteration();
@@ -75,8 +78,11 @@ public:
     /// Execute the evolution for a single time step
     void ExecuteOneTimeStep(bool must_accept_solution_Q = true);
     
-    /// Post-processing the variables for a single time step
-    void PostProcessTimeStep(std::string & file);
+    /// Post-processing the variables for a single time step from memory (is_stantdard_post_pro_Q = false)
+    void PostProcessTimeStep(std::string & file, bool is_stantdard_post_pro_Q = true);
+    
+    /// Post-processing the variables for a single time step from DoF
+    void StandardPostProcessTimeStep(std::string & file);
     
     /// Update the memory with the converged time step solution
     void AcceptTimeStepSolution();
@@ -123,6 +129,17 @@ public:
         return m_k_iterations;
     }
     
+    /** @brief Set variables being postprocessed as vector on standard post-process */
+    void Set_vec_var_names(TPZStack<std::string> & vec_var_names)
+    {
+        m_vec_var_names = vec_var_names;
+    }
+    
+    /** @brief Get variables being postprocessed as vector on standard post-process */
+    TPZStack<std::string> & Get_vec_var_names()
+    {
+        return m_vec_var_names;
+    }
     
 };
 
