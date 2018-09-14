@@ -17,12 +17,15 @@
 using namespace std;
 
 
+/// Main dedicated to execute each scenario for benchmark_1
 int main(int argc, char *argv[])
 {
     InitializePZLOG();
-    MonofasicoElastico cenario0a;
-    cenario0a.Run(2);
-
+    Monofasico scenario0a;
+    scenario0a.Run(1);
+    
+//    MonofasicoElastico cenario0a;
+//    cenario0a.Run(2);
     return 0;
 }
 

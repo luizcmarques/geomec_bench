@@ -74,6 +74,9 @@ private:
     
 public:
 
+    /// @TODO:: OD, Rename TPZFractureNeighborData -> TPZFractureDescription
+    /// @TODO:: OD, Refactor and rename the methods dependent on the approximation space
+    
     /// Default constructor
     TPZFractureNeighborData();
     

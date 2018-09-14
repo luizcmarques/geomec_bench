@@ -692,7 +692,6 @@ void Monofasico::AddMultiphysicsInterfaces(TPZCompMesh &cmesh)
     std::set<int> velmatid;
     velmatid.insert(fmatFrac);
     
-    
     int64_t nel = gmesh->NElements();
     for (int64_t el=0; el<nel; el++) {
         TPZGeoEl *gel = gmesh->Element(el);
