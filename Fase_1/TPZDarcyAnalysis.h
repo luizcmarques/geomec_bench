@@ -1,12 +1,12 @@
 //
-//  TPZDarcy2DMaterialAnalysis.h
+//  TPZDarcyAnalysis.h
 //  Benchmark0a
 //
 //  Created by Pablo Carvalho on 14/09/18.
 //
 
-#ifndef TPZDarcy2DMaterialAnalysis_h
-#define TPZDarcy2DMaterialAnalysis_h
+#ifndef TPZDarcyAnalysis_h
+#define TPZDarcyAnalysis_h
 
 #include <stdio.h>
 #include "pzanalysis.h"
@@ -19,7 +19,7 @@
 #include "pzstepsolver.h"
 #include "pzbuildmultiphysicsmesh.h"
 
-class TPZDarcy2DMaterialAnalysis : public TPZAnalysis {
+class TPZDarcyAnalysis : public TPZAnalysis {
     
 private:
     
@@ -53,13 +53,13 @@ private:
 public:
     
     /// Default constructor
-    TPZDarcy2DMaterialAnalysis();
+    TPZDarcyAnalysis();
     
     /// Destructor
-    ~TPZDarcy2DMaterialAnalysis();
+    ~TPZDarcyAnalysis();
     
     /// Copy constructor
-    TPZDarcy2DMaterialAnalysis(const TPZDarcy2DMaterialAnalysis & other);
+    TPZDarcyAnalysis(const TPZDarcyAnalysis & other);
     
     /// Set the pointer of Simulation data object
     void SetSimulationData(TPZSimulationData * simulation_data){
@@ -87,7 +87,6 @@ public:
     /// Load the last state for the hdiv and 2 meshes
     void LoadLastState();
     
-    
     /** @brief Set Residue error */
     void Set_error(STATE error)
     {
@@ -100,7 +99,6 @@ public:
         return m_error;
     }
     
-    
     /** @brief Set Correction variation */
     void Set_dx_norm(STATE dxnorm)
     {
@@ -112,7 +110,6 @@ public:
     {
         return m_dx_norm;
     }
-    
     
     /** @brief Set number of Newton iterations */
     void Set_k_iterations(int kiterations)

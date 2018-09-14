@@ -1,5 +1,5 @@
 /*
- *  Monofasico.cpp
+ *  HidraulicoMonofasico2D.cpp
  *  PZ
  *
  *  Created by Pablo Carvalho on 28/07/2017.
@@ -7,7 +7,7 @@
  *
  */
 
-#include "Monofasico.h"
+#include "HidraulicoMonofasico2D.h"
 #include "pzcheckgeom.h"
 #include "pzstack.h"
 #include "TPZParSkylineStructMatrix.h"
@@ -54,10 +54,7 @@
 
 using namespace std;
 
-const REAL Pi=M_PI;
-
-
-Monofasico::Monofasico()
+HidraulicoMonofasico2D::HidraulicoMonofasico2D()
 {
     
     fdim=2; //Dimensão do problema
@@ -97,10 +94,12 @@ Monofasico::Monofasico()
     fperm=1;
     ftheta=-1;
     
+    finsert_fractures_Q  = true;
+    
 }
 
 
-void Monofasico::Run(int pOrder)
+void HidraulicoMonofasico2D::Run(int pOrder)
 {
 
     TPZMaterial::gBigNumber = 1.e16;
@@ -113,22 +112,17 @@ void Monofasico::Run(int pOrder)
     
     HDivPiola = 1;
     
-    pOrder = 2; //Ordem polinomial de aproximação
-    
     //Gerando malha geométrica:
-    
     TPZGeoMesh *gmesh = CreateGMesh(); //Função para criar a malha geometrica
-    
-    
+
 #ifdef PZDEBUG
-    std::ofstream fileg("MalhaGeo.txt"); //Impressão da malha geométrica (formato txt)
-    std::ofstream filegvtk("MalhaGeo.vtk"); //Impressão da malha geométrica (formato vtk)
+    std::ofstream fileg("Geometry.txt"); //Impressão da malha geométrica (formato txt)
+    std::ofstream filegvtk("Geometry.vtk"); //Impressão da malha geométrica (formato vtk)
     gmesh->Print(fileg);
     TPZVTKGeoMesh::PrintGMeshVTK(gmesh, filegvtk,true);
 #endif
     
-    //Gerando malha computacional:
-    
+    // Gerando malha computacional:
     TPZCompMesh *cmesh_v = CMesh_v(gmesh, pOrder); //Função para criar a malha computacional da velocidade
     TPZCompMesh *cmesh_p = CMesh_p(gmesh, pOrder); //Função para criar a malha computacional da pressão
     
@@ -139,7 +133,9 @@ void Monofasico::Run(int pOrder)
         cmesh_p->Print(filecp);
     }
     
-    BreakConnectivity(*cmesh_v, fmatFrac); // Insert new connects to represent normal fluxes
+    if (finsert_fractures_Q) {
+        BreakConnectivity(*cmesh_v,fmatFrac); // Insert new connects to represent normal fluxes
+    }
     
     {
         std::ofstream filecv("MalhaC_v.txt"); //Impressão da malha computacional da velocidade (formato txt)
@@ -172,10 +168,13 @@ void Monofasico::Run(int pOrder)
     std::ofstream fileg1("MalhaGeo2.txt"); //Impressão da malha geométrica (formato txt)
     gmesh->Print(fileg1);
     
+    
+    
+    
     //Resolvendo o Sistema:
     int numthreads = 0;
     
-    bool optimizeBandwidth = false; //Impede a renumeração das equacoes do problema (para obter o mesmo resultado do Oden)
+    bool optimizeBandwidth = true; //Impede a renumeração das equacoes do problema (para obter o mesmo resultado do Oden)
     TPZAnalysis an(cmesh_m, optimizeBandwidth); //Cria objeto de análise que gerenciará a analise do problema
     TPZSkylineNSymStructMatrix matskl(cmesh_m); //caso nao simetrico ***
     matskl.SetNumThreads(numthreads);
@@ -199,7 +198,7 @@ void Monofasico::Run(int pOrder)
     an.DefineGraphMesh(dim,scalnames,vecnames,plotfile);
     an.PostProcess(postProcessResolution,dim);
     
-    if(insert_fractures_Q) {
+    if(finsert_fractures_Q) {
         std::cout << "Postprocessing fracture" << std::endl;
         Plot_over_fractures(cmesh_m);
     }
@@ -209,12 +208,12 @@ void Monofasico::Run(int pOrder)
 }
 
 
-Monofasico::~Monofasico()
+HidraulicoMonofasico2D::~HidraulicoMonofasico2D()
 {
     
 }
 
-TPZGeoMesh *Monofasico::CreateGMesh()
+TPZGeoMesh *HidraulicoMonofasico2D::CreateGMesh()
 {
     int64_t id, index;
     
@@ -224,11 +223,12 @@ TPZGeoMesh *Monofasico::CreateGMesh()
     TPZGeoMesh *gmesh = new TPZGeoMesh();
     
     //Aqui é implementado um método para malhas criadas no GMSH
-    
+//        std::string = PROJECT_SOURCE;
     //std::string dirname = PZSOURCEDIR;
-    std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/msh/GeometryBench.msh";
+    // @TODO:: Remove this hardcode
+//    std::string grid = BENCHMARK_SOURCE_DIR;
+    std::string grid = "/Users/omar/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench.msh";
     
     TPZGmshReader Geometry;
     REAL s = 1.0;
@@ -248,7 +248,7 @@ TPZGeoMesh *Monofasico::CreateGMesh()
 
 }
 
-void Monofasico::Sol_exact(const TPZVec<REAL> & x, TPZVec<STATE>& sol, TPZFMatrix<STATE> &dsol){
+void HidraulicoMonofasico2D::Sol_exact(const TPZVec<REAL> & x, TPZVec<STATE>& sol, TPZFMatrix<STATE> &dsol){
     
     dsol.Resize(3,2);
     sol.Resize(3);
@@ -271,7 +271,7 @@ void Monofasico::Sol_exact(const TPZVec<REAL> & x, TPZVec<STATE>& sol, TPZFMatri
     
 }
 
-TPZCompMesh *Monofasico::CMesh_v(TPZGeoMesh *gmesh, int pOrder)
+TPZCompMesh *HidraulicoMonofasico2D::CMesh_v(TPZGeoMesh *gmesh, int pOrder)
 {
     
     //Criando malha computacional:
@@ -356,7 +356,7 @@ TPZCompMesh *Monofasico::CMesh_v(TPZGeoMesh *gmesh, int pOrder)
     matids.insert(fmatPointLeft);
     matids.insert(fmatPointRight);
     
-    if (insert_fractures_Q) {
+    if (finsert_fractures_Q) {
         cmesh->SetDimModel(fdimFrac);
         cmesh->SetAllCreateFunctionsHDiv();
         cmesh->AutoBuild(matids);
@@ -365,12 +365,13 @@ TPZCompMesh *Monofasico::CMesh_v(TPZGeoMesh *gmesh, int pOrder)
     }
     
     cmesh->SetDimModel(fdim);
+    cmesh->SetAllCreateFunctionsHDiv();
     return cmesh;
     
 }
 
 
-TPZCompMesh *Monofasico::CMesh_p(TPZGeoMesh *gmesh, int pOrder)
+TPZCompMesh *HidraulicoMonofasico2D::CMesh_p(TPZGeoMesh *gmesh, int pOrder)
 {
     
     // @omar::
@@ -403,7 +404,7 @@ TPZCompMesh *Monofasico::CMesh_p(TPZGeoMesh *gmesh, int pOrder)
     
     cmesh->AutoBuild(matids);
     
-    if (insert_fractures_Q) {
+    if (finsert_fractures_Q) {
         gmesh->ResetReference();
         matids.clear();
         matids.insert(fmatFrac);
@@ -427,7 +428,7 @@ TPZCompMesh *Monofasico::CMesh_p(TPZGeoMesh *gmesh, int pOrder)
     
 }
 
-TPZCompMesh *Monofasico::CMesh_m(TPZGeoMesh *gmesh, int pOrder)
+TPZCompMesh *HidraulicoMonofasico2D::CMesh_m(TPZGeoMesh *gmesh, int pOrder)
 {
     //Criando malha computacional:
     int bc_inte_order = 10;
@@ -501,7 +502,7 @@ TPZCompMesh *Monofasico::CMesh_m(TPZGeoMesh *gmesh, int pOrder)
     cmesh->InsertMaterialObject(BCond3); //Insere material na malha
     
     
-    if (insert_fractures_Q) {
+    if (finsert_fractures_Q) {
         val1(0,0) =  -Pjusante; // right
         
         TPZMaterial * BCond4 = materialFrac->CreateBC(materialFrac, fmatPointRight , fdirichlet, val1, val2); //Cria material que implementa a condicao de contorno direita
@@ -515,7 +516,7 @@ TPZCompMesh *Monofasico::CMesh_m(TPZGeoMesh *gmesh, int pOrder)
     
     val1(0,0) = 0.0;
     
-    if (insert_fractures_Q) {
+    if (finsert_fractures_Q) {
         TPZMaterial *MatLagrange = new TPZLagrangeMultiplier(fmatInterface,fdimFrac,1); //
         cmesh->InsertMaterialObject(MatLagrange);
         
@@ -531,7 +532,7 @@ TPZCompMesh *Monofasico::CMesh_m(TPZGeoMesh *gmesh, int pOrder)
     return cmesh;
 }
 
-void Monofasico::Plot_over_fractures(TPZCompMesh *cmesh){
+void HidraulicoMonofasico2D::Plot_over_fractures(TPZCompMesh *cmesh){
     // Counting for n_fractures
     int ncel = cmesh->NElements();
     TPZStack<int> frac_indexes;
@@ -581,111 +582,19 @@ void Monofasico::Plot_over_fractures(TPZCompMesh *cmesh){
 }
 
 
-void Monofasico::BreakConnectivity(TPZCompMesh &cmesh, int matId)
+void HidraulicoMonofasico2D::BreakConnectivity(TPZCompMesh &cmesh, int matId)
 {
+    std::set<int> boundaries_ids;
+    boundaries_ids.insert(fmatBCbott);
+    boundaries_ids.insert(fmatBCleft);
+    boundaries_ids.insert(fmatBCtop);
+    boundaries_ids.insert(fmatBCright);
     
-    TPZGeoMesh *gmesh = cmesh.Reference();
-    gmesh->ResetReference();
-    cmesh.LoadReferences();
-    cmesh.SetDimModel(fdim);
-    cmesh.SetAllCreateFunctionsHDiv();
-    int64_t ncel = cmesh.NElements();
-    
-    
-    for (int64_t el=0; el<ncel; el++) {
-        TPZCompEl *cel = cmesh.Element(el);
-        if (!cel || !cel->Reference()) {
-            continue;
-        }
-        TPZGeoEl *gel = cel->Reference();
-        if(gel->MaterialId()!=matId){
-            continue;
-        }
-        if(gel->Dimension()!=fdim-1){
-            DebugStop();
-        }
-        
-        TPZStack<TPZCompElSide> neigh;
-        int nsides = gel->NSides();
-        
-        TPZGeoElSide gelside(gel,nsides-1);
-        TPZGeoElSide neighbour = gelside.Neighbour();
-        
-        gelside.EqualLevelCompElementList(neigh, 0, 0);
-        
-        if(neigh.size()!=2){
-            DebugStop();
-        }
-        gel->ResetReference();
-        neigh[0].Element()->Reference()->ResetReference();
-        neigh[1].Element()->Reference()->ResetReference();
-        
-        //working on element 0
-        {
-            TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement*>(neigh[0].Element());
-            
-            if(!intel){
-                DebugStop();
-            }
-            
-            intel->LoadElementReference();
-            
-            int locindex = intel->MidSideConnectLocId(neigh[0].Side());
-            TPZConnect &midsideconnect = intel->MidSideConnect(neigh[0].Side());
-            if(midsideconnect.NElConnected() != 2)
-            {
-                DebugStop();
-            }
-            
-            //Duplica um connect
-            int64_t index = cmesh.AllocateNewConnect(midsideconnect.NShape(), midsideconnect.NState(), midsideconnect.Order());
-            
-            intel->SetConnectIndex(locindex, index);
-            midsideconnect.DecrementElConnected();
-            cmesh.ConnectVec()[index].IncrementElConnected();
-            intel->SetSideOrient(neigh[0].Side(), 1);
-            
-            
-            
-            TPZGeoElBC bc(intel->Reference(),neigh[0].Side(),fmatFluxWrap);
-            cmesh.CreateCompEl(bc.CreatedElement(), index);
-            
-            TPZCompEl *var = cmesh.Element(index);
-            var->Reference()->ResetReference();
-            intel->Reference()->ResetReference();
-            
-            
-        }
-        
-        // working on element 1
-        {
-            TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement*>(neigh[1].Element());
-            
-            if(!intel){
-                DebugStop();
-            }
-            
-            intel->LoadElementReference();
-            
-            intel->SetSideOrient(neigh[1].Side(), 1);
-            
-            int64_t index;
-            
-            TPZGeoElBC bc(intel->Reference(),neigh[1].Side(),fmatFluxWrap);
-            cmesh.CreateCompEl(bc.CreatedElement(), index);
-            TPZCompEl *var = cmesh.Element(index);
-            var->Reference()->ResetReference();
-            
-            intel->Reference()->ResetReference();
-            
-        }
-        
-    }
-    
-    cmesh.ExpandSolution();
+    TPZFractureInsertion fracture(cmesh.Reference(),matId,boundaries_ids);
+    fracture.OpenFractureOnHdiv(&cmesh,fmatFluxWrap);
 }
 
-void Monofasico::AddMultiphysicsInterfaces(TPZCompMesh &cmesh)
+void HidraulicoMonofasico2D::AddMultiphysicsInterfaces(TPZCompMesh &cmesh)
 {
     
     TPZGeoMesh *gmesh = cmesh.Reference();
@@ -731,7 +640,3 @@ void Monofasico::AddMultiphysicsInterfaces(TPZCompMesh &cmesh)
     }
     
 }
-
-
-
-

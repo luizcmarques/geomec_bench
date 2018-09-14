@@ -31,19 +31,19 @@ void TPZSegregatedAnalysisDFN::ApplyMemoryLink(){
     }
     
  
-    TPZManVector<std::pair<int, TPZManVector<int,12>>,12>  material_ids = m_simulation_data->MaterialIds();
-    TPZManVector<int,10> volumetric_mat_id(1);
+//    TPZManVector<std::pair<int, TPZManVector<int,12>>,12>  material_ids = m_simulation_data->MaterialIds();
+//    TPZManVector<int,10> volumetric_mat_id(1);
+//
+//
+//        int matid = material_ids[0].first;
+//        volumetric_mat_id[0] = matid;
+//
+//        TPZMaterial * material_geo = m_elastoplast_analysis->Mesh()->FindMaterial(matid);
+//        TPZMaterial * material_res = m_darcy_analysis->Mesh()->FindMaterial(matid);
+//        if (!material_geo || !material_res) {
+//            DebugStop();
+//        }
     
-
-        int matid = material_ids[0].first;
-        volumetric_mat_id[0] = matid;
-        
-        TPZMaterial * material_geo = m_elastoplast_analysis->Mesh()->FindMaterial(matid);
-        TPZMaterial * material_res = m_darcy_analysis->Mesh()->FindMaterial(matid);
-        if (!material_geo || !material_res) {
-            DebugStop();
-        }
-        
 //        TPZMatWithMem<TPMRSMemory> * mat_with_memory_geo = dynamic_cast<TPZMatWithMem<TPMRSMemory> * >(material_geo);
 //        TPZMatWithMem<TPMRSMemory> * mat_with_memory_res = dynamic_cast<TPZMatWithMem<TPMRSMemory> * >(material_res);
 //        if (!mat_with_memory_geo || !mat_with_memory_res) {
@@ -68,7 +68,7 @@ void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_geo, 
     m_elastoplast_analysis->ConfigurateAnalysis(decompose_geo, m_simulation_data);
     
     // The Flux Simulator
-    m_darcy_analysis = new TPZDarcy2DMaterialAnalysis;
+    m_darcy_analysis = new TPZDarcyAnalysis;
     m_darcy_analysis->SetCompMesh(cmesh_reservoir,mustOptimizeBandwidth);
     m_darcy_analysis->ConfigurateAnalysis(decompose_res, mesh_vec, m_simulation_data);
     
@@ -88,31 +88,31 @@ void TPZSegregatedAnalysisDFN::PostProcessTimeStep(std::string & geo_file, std::
 
 void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
     
-    std::string file_res("ReservoirFlow.vtk");
-    std::string file_geo("Geomechanic.vtk");
-    
-    int n_max_fss_iterations = 10; // @TODO:: MS, please to xml file structure
-    int n_enforced_fss_iterations = 5; // @TODO:: MS, please to xml file structure
-    int n_time_steps = m_simulation_data->ReportingTimes().size();
-    REAL r_norm = m_simulation_data->epsilon_res();
-    REAL dx_norm = m_simulation_data->epsilon_cor();
-    
-    bool error_stop_criterion_Q = false;
-    bool dx_stop_criterion_Q = false;
-    for (int it = 0; it < n_time_steps; it++) {
-        for (int k = 1; k <= n_max_fss_iterations; k++) {
-            this->ExecuteOneTimeStep(false);
-            error_stop_criterion_Q = (m_darcy_analysis->Get_error() < r_norm) && (m_elastoplast_analysis->Get_error() < r_norm);
-            dx_stop_criterion_Q = (m_darcy_analysis->Get_dx_norm() < dx_norm) && (m_elastoplast_analysis->Get_dx_norm() < dx_norm);
-            
-            if ((error_stop_criterion_Q && (k > n_enforced_fss_iterations)) || dx_stop_criterion_Q) {
-                this->ExecuteOneTimeStep(true);
-                this->PostProcessTimeStep(file_geo, file_res);
-                std::cout << "TPMRSSegregatedAnalysis:: Iterative process converged with residue norm for res = " << m_darcy_analysis->Get_error() << std::endl;
-                std::cout << "TPMRSSegregatedAnalysis:: Iterative process converged with residue norm for geo = " << m_elastoplast_analysis->Get_error() << std::endl;
-                break;
-            }
-        }
-    }
+//    std::string file_res("ReservoirFlow.vtk");
+//    std::string file_geo("Geomechanic.vtk");
+//    
+//    int n_max_fss_iterations = 10; // @TODO:: MS, please to xml file structure
+//    int n_enforced_fss_iterations = 5; // @TODO:: MS, please to xml file structure
+//    int n_time_steps = m_simulation_data->ReportingTimes().size();
+//    REAL r_norm = m_simulation_data->epsilon_res();
+//    REAL dx_norm = m_simulation_data->epsilon_cor();
+//    
+//    bool error_stop_criterion_Q = false;
+//    bool dx_stop_criterion_Q = false;
+//    for (int it = 0; it < n_time_steps; it++) {
+//        for (int k = 1; k <= n_max_fss_iterations; k++) {
+//            this->ExecuteOneTimeStep(false);
+//            error_stop_criterion_Q = (m_darcy_analysis->Get_error() < r_norm) && (m_elastoplast_analysis->Get_error() < r_norm);
+//            dx_stop_criterion_Q = (m_darcy_analysis->Get_dx_norm() < dx_norm) && (m_elastoplast_analysis->Get_dx_norm() < dx_norm);
+//            
+//            if ((error_stop_criterion_Q && (k > n_enforced_fss_iterations)) || dx_stop_criterion_Q) {
+//                this->ExecuteOneTimeStep(true);
+//                this->PostProcessTimeStep(file_geo, file_res);
+//                std::cout << "TPMRSSegregatedAnalysis:: Iterative process converged with residue norm for res = " << m_darcy_analysis->Get_error() << std::endl;
+//                std::cout << "TPMRSSegregatedAnalysis:: Iterative process converged with residue norm for geo = " << m_elastoplast_analysis->Get_error() << std::endl;
+//                break;
+//            }
+//        }
+//    }
     
 }

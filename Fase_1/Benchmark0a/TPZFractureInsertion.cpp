@@ -1,11 +1,11 @@
 
-//  TPZFractureNeighborData.cpp
+//  TPZFractureInsertion.cpp
 //  Benchmark0a
 //
 //  Created by Pablo Carvalho on 02/08/18.
 //
 
-#include "TPZFractureNeighborData.h"
+#include "TPZFractureInsertion.h"
 #include "pzinterpolationspace.h"
 #include "pzintel.h"
 #include "TPZInterfaceEl.h"
@@ -13,17 +13,17 @@
 #include "pzgeoelbc.h"
 
 /// Default constructor
-TPZFractureNeighborData::TPZFractureNeighborData(){
+TPZFractureInsertion::TPZFractureInsertion(){
     
 }
 
 /// Default desconstructor
-TPZFractureNeighborData::~TPZFractureNeighborData(){
+TPZFractureInsertion::~TPZFractureInsertion(){
     
 }
 
 /// Copy constructor
-TPZFractureNeighborData::TPZFractureNeighborData(TPZFractureNeighborData & other){
+TPZFractureInsertion::TPZFractureInsertion(TPZFractureInsertion & other){
     m_fracture_id               = other.m_fracture_id;
     m_geometry                  = other.m_geometry;
     m_boundaries_material_ids   = other.m_boundaries_material_ids;
@@ -34,49 +34,49 @@ TPZFractureNeighborData::TPZFractureNeighborData(TPZFractureNeighborData & other
 }
 
 /// Set fracture Identifier
-void TPZFractureNeighborData::SetFractureIdentifier(int fracture_id){
+void TPZFractureInsertion::SetFractureIdentifier(int fracture_id){
     m_fracture_id = fracture_id;
 }
 
 /// Get fracture Identifier
-int & TPZFractureNeighborData::GetFractureMaterialId(){
+int & TPZFractureInsertion::GetFractureMaterialId(){
     return m_fracture_id;
 }
 
 /// Get node pivots
-std::vector<TPZGeoElSide> & TPZFractureNeighborData::GetPivotIndexes(){
+std::vector<TPZGeoElSide> & TPZFractureInsertion::GetPivotIndexes(){
     return m_pivot_indexes;
 }
 
 /// Get node non pivots
-std::vector<TPZGeoElSide> & TPZFractureNeighborData::GetNonPivotIndexes(){
+std::vector<TPZGeoElSide> & TPZFractureInsertion::GetNonPivotIndexes(){
     return m_non_pivot_indexes;
 }
 
 /// Get geometric fracture indexes
-std::vector<int64_t> & TPZFractureNeighborData::GetFractureIndexes(){
+std::vector<int64_t> & TPZFractureInsertion::GetFractureIndexes(){
     return m_fracture_indexes;
 }
 
 /// Get geometric indexes for left
-std::set<int64_t> & TPZFractureNeighborData::GetLeftIndexes(){
+std::set<int64_t> & TPZFractureInsertion::GetLeftIndexes(){
     return m_gel_left_indexes;
 }
 
 /// Get geometric indexes for right
-std::set<int64_t> & TPZFractureNeighborData::GetRightIndexes(){
+std::set<int64_t> & TPZFractureInsertion::GetRightIndexes(){
     return m_gel_right_indexes;
 }
 
 /// Constructor based on a computational mesh and fracture material id
-TPZFractureNeighborData::TPZFractureNeighborData(TPZGeoMesh * geometry, int fracture_id, std::set<int> & boundaries_ids){
+TPZFractureInsertion::TPZFractureInsertion(TPZGeoMesh * geometry, int fracture_id, std::set<int> & boundaries_ids){
     m_geometry = geometry;
     m_fracture_id = fracture_id;
     m_boundaries_material_ids = boundaries_ids;
-    ClassifyNeighboursofPivots();
+    BuildFractureElements();
 }
 
-void TPZFractureNeighborData::BuildFractureElements(){
+void TPZFractureInsertion::BuildFractureElements(){
     
     int64_t n_gel = m_geometry->NElements();
     for (int64_t iel=0; iel < n_gel; iel++) {
@@ -86,8 +86,6 @@ void TPZFractureNeighborData::BuildFractureElements(){
         if(gel->MaterialId() != m_fracture_id || gel->Dimension()!=m_geometry->Dimension()-1 || gel->HasSubElement() == 1){
             continue;
         }
-        
-//        std::cout << "gel->HasSubElement() = " << gel->HasSubElement() << std::endl;
         m_fracture_indexes.push_back(gel->Index());
     }
     
@@ -98,7 +96,7 @@ void TPZFractureNeighborData::BuildFractureElements(){
     
 }
 
-void TPZFractureNeighborData::BuildPivotDataStructure(){
+void TPZFractureInsertion::BuildPivotDataStructure(){
     
     for (auto ifrac : m_fracture_indexes) {
         
@@ -176,7 +174,7 @@ void TPZFractureNeighborData::BuildPivotDataStructure(){
 }
 
 /// Verify if the non pivot has been inserted on non pivot structure
-bool TPZFractureNeighborData::HasInsertedNonPivot(TPZGeoElSide pivot_side){
+bool TPZFractureInsertion::HasInsertedNonPivot(TPZGeoElSide pivot_side){
     
     TPZGeoNode node_candidate = pivot_side.Element()->Node(pivot_side.Side());
     
@@ -193,7 +191,7 @@ bool TPZFractureNeighborData::HasInsertedNonPivot(TPZGeoElSide pivot_side){
 }
 
 /// Verify if the pivot has been inserted on pivot structure
-bool TPZFractureNeighborData::HasInsertedPivot(TPZGeoElSide pivot_side){
+bool TPZFractureInsertion::HasInsertedPivot(TPZGeoElSide pivot_side){
     
     TPZGeoNode node_candidate = pivot_side.Element()->Node(pivot_side.Side());
     
@@ -209,7 +207,7 @@ bool TPZFractureNeighborData::HasInsertedPivot(TPZGeoElSide pivot_side){
     
 }
 
-std::set<int64_t> TPZFractureNeighborData::PivotNeighbours(TPZGeoElSide pivotside){
+std::set<int64_t> TPZFractureInsertion::PivotNeighbours(TPZGeoElSide pivotside){
     
     TPZStack<TPZGeoElSide> all_neighbors;
     pivotside.AllNeighbours(all_neighbors);
@@ -234,7 +232,7 @@ std::set<int64_t> TPZFractureNeighborData::PivotNeighbours(TPZGeoElSide pivotsid
 /// Find the 2 elements that will initiate the element sets
 // m_gel_left_indexes and m_gel_right_indexes have to be empty
 // take a neighbouring fracture element - insert its two neighbours along the face
-void TPZFractureNeighborData::InsertFractureNeighbours(std::set<int64_t> pivot_neighbours){
+void TPZFractureInsertion::InsertFractureNeighbours(std::set<int64_t> pivot_neighbours){
     
     
     int64_t fractture_neighbour_index = m_fracture_indexes[0];
@@ -256,7 +254,7 @@ void TPZFractureNeighborData::InsertFractureNeighbours(std::set<int64_t> pivot_n
 }
 
 
-void TPZFractureNeighborData::ClassifyElements(std::set<int64_t> pivotneighbours)
+void TPZFractureInsertion::ClassifyElements(std::set<int64_t> pivotneighbours)
 {
     while(pivotneighbours.size())
     {
@@ -278,7 +276,7 @@ void TPZFractureNeighborData::ClassifyElements(std::set<int64_t> pivotneighbours
 
 
 /// look if there is a fracture element neighbour (ok)
-int64_t TPZFractureNeighborData::FractureNeighbourIndex(TPZGeoElSide gelside){
+int64_t TPZFractureInsertion::FractureNeighbourIndex(TPZGeoElSide gelside){
 
 #ifdef PZDEBUG
     {
@@ -303,7 +301,7 @@ int64_t TPZFractureNeighborData::FractureNeighbourIndex(TPZGeoElSide gelside){
     
 }
 
-bool TPZFractureNeighborData::HasLeftIndexNeighbour(int64_t gel_index){
+bool TPZFractureInsertion::HasLeftIndexNeighbour(int64_t gel_index){
     
     TPZGeoEl * gel = m_geometry->Element(gel_index);
     int meshdim = m_geometry->Dimension();
@@ -339,7 +337,7 @@ bool TPZFractureNeighborData::HasLeftIndexNeighbour(int64_t gel_index){
     
 }
 
-bool TPZFractureNeighborData::HasRightIndexNeighbour(int64_t gel_index){
+bool TPZFractureInsertion::HasRightIndexNeighbour(int64_t gel_index){
     
     TPZGeoEl * gel = m_geometry->Element(gel_index);
     unsigned int n_corner_sides = gel->NCornerNodes();
@@ -374,7 +372,7 @@ bool TPZFractureNeighborData::HasRightIndexNeighbour(int64_t gel_index){
     
 }
 
-bool TPZFractureNeighborData::HasClassifiedNeighbour(TPZGeoElSide & pivot_side){
+bool TPZFractureInsertion::HasClassifiedNeighbour(TPZGeoElSide & pivot_side){
     
     std::set<int64_t> neighbors = PivotNeighbours(pivot_side);
     
@@ -399,12 +397,11 @@ bool TPZFractureNeighborData::HasClassifiedNeighbour(TPZGeoElSide & pivot_side){
 
 
 /// Classify the neighbouring elements of the pivots
-void TPZFractureNeighborData::ClassifyNeighboursofPivots(){
+void TPZFractureInsertion::ClassifyNeighboursofPivots(){
 
     std::ofstream filegvtk_b("Geometry_labels.vtk"); //Impressão da malha geométrica (formato vtk)
     TPZVTKGeoMesh::PrintGMeshVTK(m_geometry, filegvtk_b,true);
     
-    BuildFractureElements();
     BuildPivotDataStructure();
     
     // Computes the seeds
@@ -454,7 +451,7 @@ void TPZFractureNeighborData::ClassifyNeighboursofPivots(){
 }
 
 /// Open the connects of a fracture, create dim-1 fracture elements
-void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
+void  TPZFractureInsertion::OpenFractureOnH1(TPZCompMesh *cmesh){
     
     TPZGeoMesh *gmesh = cmesh->Reference();
     gmesh->ResetReference();
@@ -569,10 +566,113 @@ void  TPZFractureNeighborData::OpenFracture(TPZCompMesh *cmesh){
     cmesh->ExpandSolution();
 
 }
+
+/// Open the connects of a fracture, create dim-1 fracture elements (Hdiv version)
+void TPZFractureInsertion::OpenFractureOnHdiv(TPZCompMesh *cmesh, int mat_id_flux_wrap){
+    
+#ifdef PZDEBUG
+    if (!cmesh) {
+        DebugStop();
+    }
+#endif
+    
+    TPZGeoMesh *gmesh = cmesh->Reference();
+    int dim = gmesh->Dimension();
+    gmesh->ResetReference();
+    cmesh->LoadReferences();
+    
+    for (auto ifrac : m_fracture_indexes) {
+        
+        // Filtering elements by fracture material identifier
+        TPZGeoEl *gel = m_geometry->Element(ifrac);
+        
+        if (gel->HasSubElement()) {
+            continue;
+        }
+        
+        TPZStack<TPZCompElSide> neigh;
+        int nsides = gel->NSides();
+        
+        TPZGeoElSide gelside(gel,nsides-1);
+        TPZGeoElSide neighbour = gelside.Neighbour();
+        
+        gelside.EqualLevelCompElementList(neigh, 0, 0);
+        
+        if(neigh.size()!=2){
+            DebugStop();
+        }
+        gel->ResetReference();
+        neigh[0].Element()->Reference()->ResetReference();
+        neigh[1].Element()->Reference()->ResetReference();
+        
+        //working on element 0
+        {
+            TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement*>(neigh[0].Element());
+            
+            if(!intel){
+                DebugStop();
+            }
+            
+            intel->LoadElementReference();
+            
+            int locindex = intel->MidSideConnectLocId(neigh[0].Side());
+            TPZConnect &midsideconnect = intel->MidSideConnect(neigh[0].Side());
+            if(midsideconnect.NElConnected() != 2)
+            {
+                DebugStop();
+            }
+            
+            //Duplica um connect
+            int64_t index = cmesh->AllocateNewConnect(midsideconnect.NShape(), midsideconnect.NState(), midsideconnect.Order());
+            
+            intel->SetConnectIndex(locindex, index);
+            midsideconnect.DecrementElConnected();
+            cmesh->ConnectVec()[index].IncrementElConnected();
+            intel->SetSideOrient(neigh[0].Side(), 1);
+            
+        
+            TPZGeoElBC bc(intel->Reference(),neigh[0].Side(),mat_id_flux_wrap);
+            cmesh->CreateCompEl(bc.CreatedElement(), index);
+            
+            TPZCompEl *var = cmesh->Element(index);
+            var->Reference()->ResetReference();
+            intel->Reference()->ResetReference();
+            
+            
+        }
+        
+        // working on element 1
+        {
+            TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement*>(neigh[1].Element());
+            
+            if(!intel){
+                DebugStop();
+            }
+            
+            intel->LoadElementReference();
+            
+            intel->SetSideOrient(neigh[1].Side(), 1);
+            
+            int64_t index;
+            
+            TPZGeoElBC bc(intel->Reference(),neigh[1].Side(),mat_id_flux_wrap);
+            cmesh->CreateCompEl(bc.CreatedElement(), index);
+            TPZCompEl *var = cmesh->Element(index);
+            var->Reference()->ResetReference();
+            
+            intel->Reference()->ResetReference();
+            
+        }
+        
+    }
+    
+    cmesh->ExpandSolution();
+    
+}
     
 
 /// Set Discontinuous elements on fractures
-void TPZFractureNeighborData::SetDiscontinuosFrac(TPZCompMesh *cmesh){
+void TPZFractureInsertion::SetDiscontinuosFrac(TPZCompMesh *cmesh){
     
     int meshdim = cmesh->Dimension();
     cmesh->SetDimModel(meshdim);
@@ -611,7 +711,7 @@ void TPZFractureNeighborData::SetDiscontinuosFrac(TPZCompMesh *cmesh){
 }
 
 /// Set interfaces elements between fracture and volumetric elements
-void TPZFractureNeighborData::SetInterfaces(TPZCompMesh *cmesh, int matInterfaceLeft, int matInterfaceRight){
+void TPZFractureInsertion::SetInterfaces(TPZCompMesh *cmesh, int matInterfaceLeft, int matInterfaceRight){
     
     TPZGeoMesh *gmesh = cmesh->Reference();
     gmesh->ResetReference();

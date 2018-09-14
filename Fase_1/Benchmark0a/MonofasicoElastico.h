@@ -47,7 +47,7 @@
 #include "TPZParFrontStructMatrix.h"
 #include "TPZSpStructMatrix.h"
 #include "pzpostprocanalysis.h"
-#include "TPZFractureNeighborData.h"
+#include "TPZFractureInsertion.h"
 
 using namespace std;
 using namespace pzshape;

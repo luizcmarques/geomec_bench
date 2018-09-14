@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include "TPZMatWithMem.h"
 #include "TPZMatElastoPlasticAnalysis.h"
-#include "TPZDarcy2DMaterialAnalysis.h"
+#include "TPZDarcyAnalysis.h"
 
 class TPZSegregatedAnalysisDFN {
     
@@ -24,7 +24,7 @@ private:
     TPZMatElastoPlasticAnalysis * m_elastoplast_analysis;
     
     /// Pointer to reservoir analysis object
-    TPZDarcy2DMaterialAnalysis * m_darcy_analysis;
+    TPZDarcyAnalysis * m_darcy_analysis;
     
 public:
     

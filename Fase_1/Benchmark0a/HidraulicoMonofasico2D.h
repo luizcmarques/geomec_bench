@@ -1,5 +1,5 @@
 /*
- *  Monofasico.h
+ *  HidraulicoMonofasico2D.h
  *  PZ
  *
  *  Created by Pablo Carvalho on 28/07/2017.
@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef __PZ__Monofasico__
-#define __PZ__Monofasico__
+#ifndef __PZ__HidraulicoMonofasico2D__
+#define __PZ__HidraulicoMonofasico2D__
 
 #include <cmath>
 #include <set>
@@ -21,7 +21,7 @@
 #include "TPZVTKGeoMesh.h"
 #include "pzanalysis.h"
 #include "pzbndcond.h"
-#include "Monofasico.h"
+#include "HidraulicoMonofasico2D.h"
 
 #include <pzgeoel.h>
 #include "pzgeoelbc.h"
@@ -45,11 +45,13 @@
 #include "pzanalysis.h"
 #include "TPZParFrontStructMatrix.h"
 #include "TPZSpStructMatrix.h"
+#include "TPZFractureInsertion.h"
 
 using namespace std;
 using namespace pzshape;
 
-class Monofasico{
+class HidraulicoMonofasico2D {
+    
 private:
     
     int fdim; //Dimensão do problema
@@ -89,13 +91,15 @@ private:
     STATE fperm;
     int ftheta;
     
+    bool finsert_fractures_Q = true;
+    
 public:
 
-    Monofasico();
+    HidraulicoMonofasico2D();
 
     void Run(int pOrder);
     
-    ~Monofasico();
+    ~HidraulicoMonofasico2D();
     
     /*  Malhas geometricas */
     TPZGeoMesh *CreateGMesh();
@@ -110,14 +114,11 @@ public:
     
     //Fractures structure
     void Plot_over_fractures(TPZCompMesh *cmesh);
-    void BreakConnectivity(TPZCompMesh &cmesh, int matId);
+    void BreakConnectivity(TPZCompMesh &cmesh, int matId = 1);
     
     //Multiphysics Interfaces
 
     void AddMultiphysicsInterfaces(TPZCompMesh &cmesh);
-    
-    bool insert_fractures_Q = true;
-    
     
 };
 

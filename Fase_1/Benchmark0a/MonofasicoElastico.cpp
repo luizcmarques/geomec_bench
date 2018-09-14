@@ -1037,15 +1037,12 @@ void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int
     boundaries_ids.insert(fmatBCright);
     
     for (unsigned int i_f = 0; i_f <  fracture_ids.size(); i_f++) {
-        TPZFractureNeighborData fracture(cmesh.Reference(),fracture_ids[i_f],boundaries_ids);
-        fracture.OpenFracture(&cmesh); // (ok)
+        TPZFractureInsertion fracture(cmesh.Reference(),fracture_ids[i_f],boundaries_ids);
+        fracture.ClassifyNeighboursofPivots();
+        fracture.OpenFractureOnH1(&cmesh); // (ok)
         fracture.SetDiscontinuosFrac(&cmesh); // (ok)
         fracture.SetInterfaces(&cmesh, fmatInterfaceLeft, fmatInterfaceRight);
-        
-  //      std::ofstream filecE("CmeshWithFrac.txt"); //Impressão da malha computacional da velocidade (formato txt)
-  //      cmesh.Print(filecE);
     }
-    int aka  = 0;
 }
 
 void MonofasicoElastico::AddMultiphysicsInterfaces(TPZCompMesh &cmesh)

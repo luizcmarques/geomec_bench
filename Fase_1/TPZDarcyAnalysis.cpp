@@ -1,18 +1,18 @@
 //
-//  TPZMatElastoPlasticAnalysis.hpp
+//  TPZDarcyAnalysis.cpp
 //  Benchmark0a
 //
 //  Created by Pablo Carvalho on 14/09/18.
 //
 
+#include "TPZDarcyAnalysis.h"
 
-#include "TPZMatElastoPlasticAnalysis.h"
-
-TPZMatElastoPlasticAnalysis::TPZMatElastoPlasticAnalysis() : TPZAnalysis(){
+TPZDarcyAnalysis::TPZDarcyAnalysis() : TPZAnalysis(){
     
     m_simulation_data = NULL;
     m_X_n.Resize(0, 0);
     m_X.Resize(0, 0);
+    m_mesh_vec.Resize(0);
     m_error = 0;
     m_dx_norm = 0;
     m_k_iterations = 0;
@@ -21,15 +21,16 @@ TPZMatElastoPlasticAnalysis::TPZMatElastoPlasticAnalysis() : TPZAnalysis(){
     
 }
 
-TPZMatElastoPlasticAnalysis::~TPZMatElastoPlasticAnalysis(){
+TPZDarcyAnalysis::~TPZDarcyAnalysis(){
     
 }
 
-TPZMatElastoPlasticAnalysis::TPZMatElastoPlasticAnalysis(const TPZMatElastoPlasticAnalysis & other){
+TPZDarcyAnalysis::TPZDarcyAnalysis(const TPZDarcyAnalysis & other){
     
     m_simulation_data   = other.m_simulation_data;
     m_X_n               = other.m_X_n;
     m_X                 = other.m_X;
+    m_mesh_vec          = other.m_mesh_vec;
     m_error             = other.m_error;
     m_dx_norm           = other.m_dx_norm;
     m_k_iterations      = other.m_k_iterations;
@@ -38,7 +39,8 @@ TPZMatElastoPlasticAnalysis::TPZMatElastoPlasticAnalysis(const TPZMatElastoPlast
     
 }
 
-void TPZMatElastoPlasticAnalysis::ConfigurateAnalysis(DecomposeType decomposition, TPZSimulationData * simulation_data){
+void TPZDarcyAnalysis::ConfigurateAnalysis(DecomposeType decomposition, TPZManVector<TPZCompMesh * , 2> & mesh_vec, TPZSimulationData * simulation_data){
+    
 //    SetSimulationData(simulation_data);
 //    TPZStepSolver<STATE> step;
 //    unsigned int number_threads = m_simulation_data->n_threads();
@@ -47,11 +49,13 @@ void TPZMatElastoPlasticAnalysis::ConfigurateAnalysis(DecomposeType decompositio
 //        std::cout << "Call SetCompMesh method." << std::endl;
 //        DebugStop();
 //    }
+//    m_mesh_vec = mesh_vec;
+//
 //
 //    switch (decomposition) {
-//        case ECholesky:
+//        case ELU:
 //        {
-//            TPZSkylineStructMatrix struct_mat(Mesh());
+//            TPZSkylineNSymStructMatrix struct_mat(Mesh());
 //            struct_mat.SetNumThreads(number_threads);
 //            this->SetStructuralMatrix(struct_mat);
 //        }
@@ -79,57 +83,49 @@ void TPZMatElastoPlasticAnalysis::ConfigurateAnalysis(DecomposeType decompositio
 //    m_post_processor = new TPZPostProcAnalysis;
 //    m_post_processor->SetCompMesh(Mesh());
 //
+//
+//
+//    int n_regions = m_simulation_data->NumberOfRegions();
 //    TPZManVector<std::pair<int, TPZManVector<int,12>>,12>  material_ids = m_simulation_data->MaterialIds();
-//    TPZManVector<int,10> post_mat_id(1);
-//
-//        int matid = material_ids[0].first;
-//        post_mat_id[0] = matid;
-//
+//    TPZManVector<int,10> post_mat_id(n_regions);
+//    for (int iregion = 0; iregion < n_regions; iregion++)
+//    {
+//        int matid = material_ids[iregion].first;
+//        post_mat_id[iregion] = matid;
+//    }
 //
 //    // @TODO:: MS, please transfer from xml file
-//    m_var_names.Push("ux");
-//    m_var_names.Push("uy");
-//    m_var_names.Push("sxx");
-//    m_var_names.Push("syy");
-//    m_var_names.Push("szz");
-//    m_var_names.Push("exx");
-//    m_var_names.Push("eyy");
-//    m_var_names.Push("ezz");
-//    m_var_names.Push("epxx");
-//    m_var_names.Push("epyy");
-//    m_var_names.Push("epzz");
-//
-////    if (m_simulation_data->Dimension() == 3) {
-////        m_var_names.Push("uz");
-////    }
-//
+//    m_var_names.Push("p");
+//    m_var_names.Push("phi");
 //    m_post_processor->SetPostProcessVariables(post_mat_id, m_var_names);
 //
 //    TPZFStructMatrix structmatrix(m_post_processor->Mesh());
 //    structmatrix.SetNumThreads(n_threads);
 //    m_post_processor->SetStructuralMatrix(structmatrix);
-    
+
 }
 
-void TPZMatElastoPlasticAnalysis::ExecuteNewtonInteration(){
+void TPZDarcyAnalysis::ExecuteNewtonInteration(){
     this->Assemble();
     this->Rhs() *= -1.0;
     this->Solve();
 }
 
-void TPZMatElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q){
+void TPZDarcyAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q){
     
 //    if (m_simulation_data->IsInitialStateQ()) {
 //        m_X = Solution();
 //    }
 //
+//    m_simulation_data->SetCurrentStateQ(false);
+//    AcceptTimeStepSolution();
+//
+//    //    // Initial guess
+//    //    m_X_n = m_X;
 //    m_simulation_data->SetCurrentStateQ(true);
+//    this->AcceptTimeStepSolution();
 //
-//    //    // Reset du to zero
-//    //    Solution().Zero();
-//    //    LoadSolution(Solution());
-//
-//    TPZFMatrix<STATE> dx(Solution());
+//    TPZFMatrix<STATE> dx;
 //    bool residual_stop_criterion_Q = false;
 //    bool correction_stop_criterion_Q = false;
 //    REAL norm_res, norm_dx;
@@ -139,12 +135,13 @@ void TPZMatElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q
 //
 //    for (int i = 1; i <= n_it; i++) {
 //        this->ExecuteNewtonInteration();
-//        dx += Solution();
-//        norm_dx  = Norm(Solution());
-//        LoadSolution(dx);
-//        this->AcceptPseudoTimeStepSolution();
+//        dx = Solution();
+//        norm_dx  = Norm(dx);
+//        m_X_n += dx;
+//
+//        this->AcceptTimeStepSolution();
 //        this->AssembleResidual();
-//        norm_res = Norm(this->Rhs());
+//        norm_res = Norm(Rhs());
 //        residual_stop_criterion_Q   = norm_res < r_norm;
 //        correction_stop_criterion_Q = norm_dx  < dx_norm;
 //
@@ -154,26 +151,23 @@ void TPZMatElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q
 //
 //        if (residual_stop_criterion_Q ||  correction_stop_criterion_Q) {
 //#ifdef PZDEBUG
-//            std::cout << "TPMRSGeomechanicAnalysis:: Nonlinear process converged with residue norm = " << norm_res << std::endl;
-//            std::cout << "TPMRSGeomechanicAnalysis:: Number of iterations = " << i << std::endl;
-//            std::cout << "TPMRSGeomechanicAnalysis:: Correction norm = " << norm_dx << std::endl;
+//            std::cout << "TPMRSMonoPhasicAnalysis:: Nonlinear process converged with residue norm = " << norm_res << std::endl;
+//            std::cout << "TPMRSMonoPhasicAnalysis:: Number of iterations = " << i << std::endl;
+//            std::cout << "TPMRSMonoPhasicAnalysis:: Correction norm = " << norm_dx << std::endl;
 //#endif
-//            LoadSolution(dx);
 //            if (must_accept_solution_Q) {
-//                m_simulation_data->SetTransferCurrentToLastQ(true);
-//                AcceptPseudoTimeStepSolution();
-//                m_simulation_data->SetTransferCurrentToLastQ(false);
+//                m_X = m_X_n;
 //            }
 //            break;
 //        }
 //    }
 //
 //    if (residual_stop_criterion_Q == false) {
-//        std::cout << "TPMRSGeomechanicAnalysis:: Nonlinear process not converged with residue norm = " << norm_res << std::endl;
+//        std::cout << "TPMRSMonoPhasicAnalysis:: Nonlinear process not converged with residue norm = " << norm_res << std::endl;
 //    }
 }
 
-void TPZMatElastoPlasticAnalysis::PostProcessTimeStep(std::string & file){
+void TPZDarcyAnalysis::PostProcessTimeStep(std::string & file){
     
     int dim = Mesh()->Dimension();
     int div = 0;
@@ -183,30 +177,30 @@ void TPZMatElastoPlasticAnalysis::PostProcessTimeStep(std::string & file){
     m_post_processor->PostProcess(div,dim);
 }
 
-void TPZMatElastoPlasticAnalysis::AcceptPseudoTimeStepSolution(){
+void TPZDarcyAnalysis::AcceptTimeStepSolution(){
     
 //    bool state = m_simulation_data->IsCurrentStateQ();
 //    if (state) {
 //        m_simulation_data->Set_must_accept_solution_Q(true);
+//        LoadCurrentState();
 //        AssembleResidual();
 //        m_simulation_data->Set_must_accept_solution_Q(false);
 //    }else{
 //        m_simulation_data->Set_must_accept_solution_Q(true);
+//        LoadLastState();
 //        AssembleResidual();
 //        m_simulation_data->Set_must_accept_solution_Q(false);
 //    }
 }
 
 
-void TPZMatElastoPlasticAnalysis::LoadCurrentState(){
+void TPZDarcyAnalysis::LoadCurrentState(){
     LoadSolution(m_X_n);
-    DebugStop();
+    TPZBuildMultiphysicsMesh::TransferFromMultiPhysics(m_mesh_vec, Mesh());
 }
 
-void TPZMatElastoPlasticAnalysis::LoadLastState(){
+void TPZDarcyAnalysis::LoadLastState(){
     LoadSolution(m_X);
-    DebugStop();
+    TPZBuildMultiphysicsMesh::TransferFromMultiPhysics(m_mesh_vec, Mesh());
 }
-
-
 

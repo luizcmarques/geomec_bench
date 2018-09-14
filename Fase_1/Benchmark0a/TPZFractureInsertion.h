@@ -1,12 +1,12 @@
 //
-//  TPZFractureNeighborData.h
+//  TPZFractureInsertion.h
 //  Benchmark0a
 //  Class that stores fracture neighbor data in terms of geometric element indexes
 //  Created by Pablo Carvalho on 02/08/18.
 //
 
-#ifndef TPZFractureNeighborData_h
-#define TPZFractureNeighborData_h
+#ifndef TPZFractureInsertion_h
+#define TPZFractureInsertion_h
 
 #include <stdio.h>
 #include <iostream>
@@ -14,7 +14,7 @@
 #include "pzgmesh.h"
 #include "TPZVTKGeoMesh.h"
 
-class TPZFractureNeighborData {
+class TPZFractureInsertion {
   
 private:
     
@@ -69,40 +69,28 @@ private:
     /// build the pivot and non pivot data structure (ok)
     void BuildPivotDataStructure();
     
-    /// Classify the neighbouring elements of the pivots
-    void ClassifyNeighboursofPivots();
-    
 public:
 
-    /// @TODO:: OD, Rename TPZFractureNeighborData -> TPZFractureDescription
+    /// @TODO:: OD, Rename TPZFractureInsertion -> TPZFractureDescription
     /// @TODO:: OD, Refactor and rename the methods dependent on the approximation space
     
     /// Default constructor
-    TPZFractureNeighborData();
+    TPZFractureInsertion();
     
     /// Default desconstructor
-    ~TPZFractureNeighborData();
+    ~TPZFractureInsertion();
     
     /// Copy constructor
-    TPZFractureNeighborData(TPZFractureNeighborData & other);
+    TPZFractureInsertion(TPZFractureInsertion & other);
     
     /// Constructor based on a computational mesh and fracture material id
-    TPZFractureNeighborData(TPZGeoMesh * geometry, int fracture_id, std::set<int> & boundaries_ids);
+    TPZFractureInsertion(TPZGeoMesh * geometry, int fracture_id, std::set<int> & boundaries_ids);
 
     /// Set fracture Identifier
     void SetFractureIdentifier(int fracture_id);
     
     /// Get fracture material Identifier
     int & GetFractureMaterialId();
-    
-    /// Open the connects of a fracture, create dim-1 fracture elements
-    void OpenFracture(TPZCompMesh *cmesh);
-    
-    /// Set Discontinuous elements on fractures
-    void SetDiscontinuosFrac(TPZCompMesh *cmesh);
-    
-    /// Set interfaces elements between fracture and volumetric elements
-    void SetInterfaces(TPZCompMesh *cmesh, int matInterfaceLeft, int matInterfaceRight);
     
     /// Get node pivots
     std::vector<TPZGeoElSide> & GetPivotIndexes();
@@ -119,7 +107,22 @@ public:
     /// Get geometric element indexes for right
     std::set<int64_t> & GetRightIndexes();
     
+    /// Classify the neighbouring elements of the pivots
+    void ClassifyNeighboursofPivots();
+    
+    /// Open the connects of a fracture, create dim-1 fracture elements (H1 version)
+    void OpenFractureOnH1(TPZCompMesh *cmesh);
+    
+    /// Open the connects of a fracture, create dim-1 fracture elements (Hdiv version)
+    void OpenFractureOnHdiv(TPZCompMesh *cmesh, int mat_id_flux_wrap);
+    
+    /// Set Discontinuous elements on fractures
+    void SetDiscontinuosFrac(TPZCompMesh *cmesh);
+    
+    /// Set interfaces elements between fracture and volumetric elements
+    void SetInterfaces(TPZCompMesh *cmesh, int matInterfaceLeft, int matInterfaceRight);
+    
 };
 
 
-#endif /* TPZFractureNeighborData_h */
+#endif /* TPZFractureInsertion_h */
