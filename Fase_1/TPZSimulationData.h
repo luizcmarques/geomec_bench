@@ -34,8 +34,14 @@ protected:
     /** @brief Polynomial order for elasticity component */
     int m_elasticity_order;
     
+    /** @brief Material ID related to Elasticity material */
+    int m_elasticity_ID;
+    
     /** @brief Polynomial order for diffusion component */
     int m_darcy_order;
+    
+    /** @brief Material ID related to Darcy material */
+    int m_darcy_ID;
     
     /** @brief Physical dimension of the domain */
     int m_dimesion;
@@ -98,6 +104,15 @@ public:
     void Set_elasticity_order(int elasticity_order){
         m_elasticity_order = elasticity_order;
     }
+    /** @brief Set the material ID related to Elasticity material */
+    void Set_elasticity_matid(int elasticity_matid){
+        m_elasticity_ID = elasticity_matid;
+    }
+    
+    /** @brief Get the material ID related to Elasticity material */
+    int Get_elasticity_matid(){
+        return m_elasticity_ID;
+    }
     
     /** @brief Get the polynomial order for the elasticity approximation  */
     int Get_elasticity_order(){
@@ -107,6 +122,16 @@ public:
     /** @brief Set the polynomial order for the Darcy's approximation */
     void Set_darcy_order(int darcy_order){
         m_darcy_order = darcy_order;
+    }
+    
+    /** @brief Set the material ID related to Darcy's material */
+    void Set_darcy_matid(int darcy_matid){
+        m_darcy_ID = darcy_matid;
+    }
+    
+    /** @brief Get the material ID related to Darcy's material */
+    int Get_darcy_matid(){
+        return m_darcy_ID;
     }
     
     /** @brief Get the polynomial order for the Darcy's approximation  */

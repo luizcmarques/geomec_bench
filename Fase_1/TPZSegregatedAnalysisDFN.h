@@ -12,6 +12,7 @@
 #include "TPZMatWithMem.h"
 #include "TPZMatElastoPlasticAnalysis.h"
 #include "TPZDarcyAnalysis.h"
+#include "TPZMemoryDFN.h"
 
 class TPZSegregatedAnalysisDFN {
     

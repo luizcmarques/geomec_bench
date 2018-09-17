@@ -29,27 +29,27 @@ void TPZSegregatedAnalysisDFN::ApplyMemoryLink(){
     if (!m_simulation_data) {
         DebugStop();
     }
-    
  
 //    TPZManVector<std::pair<int, TPZManVector<int,12>>,12>  material_ids = m_simulation_data->MaterialIds();
 //    TPZManVector<int,10> volumetric_mat_id(1);
-//
-//
-//        int matid = material_ids[0].first;
-//        volumetric_mat_id[0] = matid;
-//
-//        TPZMaterial * material_geo = m_elastoplast_analysis->Mesh()->FindMaterial(matid);
-//        TPZMaterial * material_res = m_darcy_analysis->Mesh()->FindMaterial(matid);
-//        if (!material_geo || !material_res) {
-//            DebugStop();
-//        }
+//    int matid = material_ids[0].first;
+//    volumetric_mat_id[0] = matid;
     
-//        TPZMatWithMem<TPMRSMemory> * mat_with_memory_geo = dynamic_cast<TPZMatWithMem<TPMRSMemory> * >(material_geo);
-//        TPZMatWithMem<TPMRSMemory> * mat_with_memory_res = dynamic_cast<TPZMatWithMem<TPMRSMemory> * >(material_res);
-//        if (!mat_with_memory_geo || !mat_with_memory_res) {
-//            DebugStop();
-//        }
-//        mat_with_memory_res->SetMemory(mat_with_memory_geo->GetMemory());
+        int matid_elast = m_simulation_data->Get_elasticity_matid();
+        int matid_darcy = m_simulation_data->Get_darcy_matid();
+
+        TPZMaterial * material_geo = m_elastoplast_analysis->Mesh()->FindMaterial(matid_elast);
+        TPZMaterial * material_res = m_darcy_analysis->Mesh()->FindMaterial(matid_darcy);
+        if (!material_geo || !material_res) {
+            DebugStop();
+        }
+    
+        TPZMatWithMem<TPZMemoryDFN> * mat_with_memory_geo = dynamic_cast<TPZMatWithMem<TPZMemoryDFN> * >(material_geo);
+        TPZMatWithMem<TPZMemoryDFN> * mat_with_memory_res = dynamic_cast<TPZMatWithMem<TPZMemoryDFN> * >(material_res);
+        if (!mat_with_memory_geo || !mat_with_memory_res) {
+            DebugStop();
+        }
+        mat_with_memory_res->SetMemory(mat_with_memory_geo->GetMemory());
     
 }
 
