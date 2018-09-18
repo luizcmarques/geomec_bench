@@ -23,8 +23,6 @@
 #include "TPZMultiphysicsInterfaceEl.h"
 #include "pzmultiphysicselement.h"
 #include "TPZInterfaceEl.h"
-#include "TPZMatElastoPlasticDFN.h"
-#include "TPZMatElastoPlasticDFN2D.h"
 #include "TPZElasticCriterion.h"
 #include "pzporoelastoplasticmem.h"
 #include "pzcompelwithmem.h"
@@ -65,6 +63,8 @@
 #include "TPZParFrontStructMatrix.h"
 #include "TPZSSpStructMatrix.h"
 #include "TPZGmshReader.h"
+
+#include "../TPZMatElastoPlasticDFN_impl.h"
 
 #define TRIANGLEMESH
 
@@ -575,10 +575,10 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     TPZVec<REAL> force(fdim,0.);
     //REAL E = 0;
     //REAL poisson = 0;
-    int planestress = -1;
-    TPZMatElastoPlasticDFN2D<TPZElasticCriterion , TPZPoroElastoPlasticMem> *material;
+    
+    TPZMatElastoPlasticDFN<TPZElasticCriterion , TPZPoroElastoPlasticMem> *material;
     //material = new TPZElasticityMaterial(fmatID, fEyoung, fpoisson, ffx, ffy, planestress);
-    material = new TPZMatElastoPlasticDFN2D<TPZElasticCriterion , TPZPoroElastoPlasticMem> (fmatID , planestress);
+    material = new TPZMatElastoPlasticDFN<TPZElasticCriterion , TPZPoroElastoPlasticMem> (fmatID,fdim);
     TPZElasticCriterion obj ;
     
     TPZElasticResponse er;

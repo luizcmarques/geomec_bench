@@ -11,51 +11,15 @@
 #include "TPZElastoPlasticMem.h"
 #include "pzporoelastoplasticmem.h"
 
-  /**
-   * Implements an elastoplastic material and uses the memory feature to store the damage variables
-   * This material works only together with the Plasticity Library.
-   */
+/**
+* Implements an elastoplastic material and uses the memory feature to store the damage variables
+* This material works only together with the Plasticity Library.
+*/
 
-//typedef TPZMatWithMem<TPZElastoPlasticMem> BASE_MATWITHMEM;
-
-template <class T, class TMEM = TPZElastoPlasticMem>
+template <class T, class TMEM>
 class  TPZMatElastoPlasticDFN : public TPZMatWithMem<TMEM>
 {
    public:
-
-      enum SOLUTIONVARS{ENone = -1,
-	         
-          EDisplacement=0,//0
-          EDisplacementMem,//1
-          EPrincipalStress,//2
-          ENormalStress,//3
-          EShearStress,//4
-          ENormalStrain,//5
-          EShearStrain,//6
-          ENormalPlasticStrain,//7
-          EPrincipalStrain,//8
-          
-          EVolElasticStrain,//9
-          EVolPlasticStrain,//10
-          EVolTotalStrain,//11
-          EAlpha,//12
-          EPlasticSteps,//13
-          EPlasticSqJ2,//14
-          EYield,//15
-          EMisesStress,//12
-          EI1Stress,//13
-          EJ2Stress,//14
-          EXStress,//15
-          EYStress,//16
-          EZStress,//17
-          EDisplacementX,//18
-          EDisplacementY,//19
-          EDisplacementZ,//20
-          EDisplacementMemX,//21
-          EDisplacementMemY,//22
-          EDisplacementMemZ//23
-      };
-		
 		
       /**
        * Default constructor
@@ -67,7 +31,7 @@ class  TPZMatElastoPlasticDFN : public TPZMatWithMem<TMEM>
        *  contains the index of the material object within the
        *  vector
        */
-      TPZMatElastoPlasticDFN(int id);
+      TPZMatElastoPlasticDFN(int id, int dim);
 
       /** Creates a material object based on the referred object and
        *  inserts it in the vector of material pointers of the mesh.
@@ -81,9 +45,9 @@ class  TPZMatElastoPlasticDFN : public TPZMatWithMem<TMEM>
 	  /** Sets the plasticity model already with proper parameters */
       void SetPlasticity(T & plasticity);
     
-        virtual void UpdateMaterialCoeficients(TPZVec<REAL> &x,T & plasticity)
+    virtual void UpdateMaterialCoeficients(TPZVec<REAL> &x,T & plasticity)
     {
-        
+        DebugStop();
     }
 	
 	  /** Sets the material bulk density */
@@ -253,6 +217,8 @@ class  TPZMatElastoPlasticDFN : public TPZMatWithMem<TMEM>
        * Unique identifier for serialization purposes
        */
       public:
+    
+    
 virtual int ClassId() const;
 
 
