@@ -174,10 +174,11 @@ void HidraulicoMonofasico2D::Run(int pOrder)
     TPZSimulationData *simulation_data =  new TPZSimulationData;
     simulation_data->Get_volumetric_material_id().push_back(fmatID);
     simulation_data->Set_n_threads(0);
-    simulation_data->Set_epsilon_cor(0.001);
+    simulation_data->Set_epsilon_res(0.001);
     simulation_data->Set_epsilon_cor(0.001);
     simulation_data->Set_n_iterations(1);
     
+    std::string plotfile("Benchmark_0a_DarcyTest.vtk");
     TPZStack<std::string> scalnames, vecnames;
     scalnames.Push("P");
     vecnames.Push("V");
@@ -187,16 +188,15 @@ void HidraulicoMonofasico2D::Run(int pOrder)
     analysis->SetCompMesh(cmesh_m, mustOptimizeBandwidth);
     analysis->ConfigurateAnalysis(ELU, meshvector, simulation_data, scalnames);
     analysis->Set_vec_var_names(vecnames);
-    
-    std::string plotfile("Benchmark_0a_DarcyTest.vtk");
+
     analysis->ExecuteOneTimeStep();
     analysis->PostProcessTimeStep(plotfile,true);
-    
+
     if(finsert_fractures_Q) {
         std::cout << "Postprocessing fracture" << std::endl;
         Plot_over_fractures(cmesh_m);
     }
-    
+
     std::cout << "FINISHED!" << std::endl;
     
     return;
@@ -218,11 +218,20 @@ void HidraulicoMonofasico2D::Run(int pOrder)
     
     //Pós-processamento (paraview):
     
-
-
-
+    //an.Solution().Print(std::cout);
     
 
+    
+    int postProcessResolution = 0; //  keep low as possible
+    int dim = gmesh->Dimension();
+    an.DefineGraphMesh(dim,scalnames,vecnames,plotfile);
+    an.PostProcess(postProcessResolution,dim);
+    
+//    if(insert_fractures_Q) {
+//        std::cout << "Postprocessing fracture" << std::endl;
+//        Plot_over_fractures(cmesh_m);
+//    }
+    return;
     
 }
 

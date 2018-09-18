@@ -94,6 +94,7 @@ void TPZDarcyAnalysis::ConfigurateAnalysis(DecomposeType decomposition, TPZManVe
     for (auto i : var_names) {
         m_var_names.Push(i);
     }
+
     m_post_processor->SetPostProcessVariables(post_mat_id, m_var_names);
     TPZFStructMatrix structmatrix(m_post_processor->Mesh());
     structmatrix.SetNumThreads(n_threads);
