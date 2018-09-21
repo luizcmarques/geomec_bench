@@ -44,6 +44,8 @@ option(USING_VTK "Whether the VTK library will be linked in" OFF)
 if(USING_VTK)
     find_package(VTK 8.0.0 REQUIRED)
     include(${VTK_USE_FILE})
+else()
+    unset(VTK_LIBRARIES)
 endif(USING_VTK)
 
 
