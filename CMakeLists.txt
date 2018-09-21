@@ -25,8 +25,6 @@ ELSE()
 ENDIF (WIN32)
 
 
-include_directories(${PZ_INCLUDE_DIRS})
-
 # this is the top level directory of your build tree 
 MESSAGE( STATUS "CMAKE_BINARY_DIR:         " ${PZ_INCLUDE_DIRS} )
 
@@ -40,6 +38,11 @@ IF(APPLE)
 ENDIF(APPLE)
 
 include_directories(${PZ_INCLUDE_DIRS})
+
+find_package(VTK 8.0.0 REQUIRED)
+
+include(${VTK_USE_FILE})
+
 
 # Location to search files or libraries
 set(SEARCH_DIRS ENV PATH /usr/local/opt/ /usr/local/opt/qt5/lib/cmake/ /usr/include /usr/local/include /usr/local/include/boost /usr/local/include/log4cxx /usr/local/include/tbb /usr/lib /usr/lib64 /usr/local/lib ./. ./.. ./../libs ./../libs/fad ./../libs/metis ./../libs/metis/include ./../libs/metis/lib ./../externallibs ./../externallibs/fad ./../externallibs/pthread ./../externallibs/metis ./../externallibs/metis/include ./../externallibs/metis/lib ./..metis ./../metis/include ./../metis/lib ./externallibs/lib ./externallibs/include ./../externallibs/lib ./../externallibs/include)
