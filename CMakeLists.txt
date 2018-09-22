@@ -39,9 +39,15 @@ ENDIF(APPLE)
 
 include_directories(${PZ_INCLUDE_DIRS})
 
-find_package(VTK 8.0.0 REQUIRED)
+#enabling VTK library
+option(USING_VTK "Whether the VTK package will be linked IN" OFF)
 
-include(${VTK_USE_FILE})
+if(USING_VTK)
+	find_package(VTK 8.0.0 REQUIRED)
+	include(${VTK_USE_FILE})
+else()
+	unset(VTK_LIBRARIES)
+endif(USING_VTK)
 
 
 # Location to search files or libraries
