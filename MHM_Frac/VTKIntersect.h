@@ -10,8 +10,12 @@
 
 #include <stdio.h>
 
+#ifdef USING_VTK
+
 void GenerateVTKInput();
 
 void VTKWindow();
+
+#endif
 
 #endif /* VTKIntersect_hpp */

@@ -20,9 +20,13 @@ int main(int argc, char *argv[]) {
 #ifdef LOG4CXX
     InitializePZLOG();
 #endif
+    
+#ifdef USING_VTK
     GenerateVTKInput();
     VTKWindow();
     exit(0);
+#endif
+    
     // Initializing uniform refinements for reference elements
     gRefDBase.InitializeUniformRefPattern(EOned);
     gRefDBase.InitializeUniformRefPattern(EQuadrilateral);

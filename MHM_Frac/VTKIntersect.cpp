@@ -20,6 +20,7 @@
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
  PURPOSE.  See the above copyright notice for more information.
  =========================================================================*/
+#ifdef USING_VTK
 
 #include <vtkActor.h>
 #include <vtkAppendPolyData.h>
@@ -259,3 +260,5 @@ void VTKWindow()
     
     
 }
+
+#endif
