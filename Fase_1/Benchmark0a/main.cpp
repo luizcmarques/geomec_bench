@@ -19,7 +19,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
     InitializePZLOG();
-    HidraulicoMonofasico2D scenario0a;
+    MonofasicoElastico scenario0a;
     scenario0a.Run(1);
     
     

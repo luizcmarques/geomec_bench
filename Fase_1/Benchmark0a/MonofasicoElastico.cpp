@@ -28,7 +28,7 @@
 #include "pzcompelwithmem.h"
 #include "TPZStiffFracture.h"
 #include "pzelastoplasticanalysis.h"
-#include "TPZDarcy2DMaterialMem.h"
+#include "../TPZDarcy2DMaterialMem.h"
 
 #include "pzelasmat.h"
 #include "pzinterpolationspace.h"
@@ -63,7 +63,7 @@
 #include "TPZParFrontStructMatrix.h"
 #include "TPZSSpStructMatrix.h"
 #include "TPZGmshReader.h"
-
+#include "../TPZMonoPhasicMemoryDFN.h"
 #include "../TPZMatElastoPlasticDFN_impl.h"
 
 #define TRIANGLEMESH
@@ -816,7 +816,7 @@ TPZCompMesh *MonofasicoElastico::CMesh_m(TPZGeoMesh *gmesh, int pOrder){
     //    material = new TPZDarcy2DMaterialMem<TPZPoroElastoPlasticMem> (fmatID,fdim,1,1);
     
     
-    TPZDarcy2DMaterialMem<TPZPoroElastoPlasticMem> *material = new TPZDarcy2DMaterialMem<TPZPoroElastoPlasticMem> (fmatID,fdim,1,1);//criando material que implementa a formulacao fraca do problema modelo
+    TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN> *material = new TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN> (fmatID,fdim,1,1);//criando material que implementa a formulacao fraca do problema modelo
     // Inserindo material na malha
     TPZAutoPointer<TPZFunction<STATE> > fp = new TPZDummyFunction<STATE> (F_source);
 //    TPZAutoPointer<TPZFunction<STATE> > solp = new TPZDummyFunction<STATE> (Sol_exact);

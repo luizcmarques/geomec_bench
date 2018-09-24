@@ -16,12 +16,13 @@
 #include "TPZMaterial.h"
 #include "TPZElastoPlasticMem.h"
 #include "pzporoelastoplasticmem.h"
+#include "TPZMonoPhasicMemoryDFN.h"
 
 #ifndef TPZDARCY2DMATERIAL
 #define TPZDARCY2DMATERIAL
 
 
-template <class TMEM = TPZPoroElastoPlasticMem>
+template <class TMEM = TPZMonoPhasicMemoryDFN>
 class TPZDarcy2DMaterialMem : public TPZMatWithMem<TMEM>  {
     
 protected:
@@ -133,7 +134,7 @@ public:
     }
     
     /** returns the integrable dimension of the material */
-    int Dimension() const {return 2;}
+    int Dimension() const {return fDimension;}
     
     /** returns the number of state variables associated with the material */
     int NStateVariables() {return 4;} // for hdiv are 3, plus pressure, so 3 + 1 = 4 itapopo
@@ -151,7 +152,7 @@ public:
     /** Computes the divergence over the parametric space */
     void ComputeDivergenceOnDeformed(TPZVec<TPZMaterialData> &datavec, TPZFMatrix<STATE> &DivergenceofPhi);
     
-    void ComputeDivergenceOnMaster(TPZVec<TPZMaterialData> &datavec, TPZFMatrix<STATE> &DivergenceofPhi, STATE &DivergenceofU);
+    void ComputeDivergenceOnMaster(TPZVec<TPZMaterialData> &datavec, TPZFMatrix<STATE> &DivergenceofPhi);
     
     /** returns the solution associated with the var index based on
      * the finite element approximation */
@@ -220,9 +221,7 @@ public:
      * @since April 16, 2007
      */
     
-    virtual void Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ef){
-        DebugStop();
-    }
+    virtual void Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ef);
     
     /**
      * It computes a contribution to the stiffness matrix and load vector at one BC integration point.

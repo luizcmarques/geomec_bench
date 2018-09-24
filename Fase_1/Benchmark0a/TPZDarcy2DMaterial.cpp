@@ -511,8 +511,6 @@ void TPZDarcy2DMaterial::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
             
         }
         
-        
-        
         // matrix A - velocity * test-funtion velocity
         for(int j = 0; j < nshapeV; j++){
             int jphi = datavec[vindex].fVecShapeIndex[j].second;
@@ -535,6 +533,8 @@ void TPZDarcy2DMaterial::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weigh
             
             STATE val = InnerVec(phiVi, KphiVj);
             ek(i,j) += weight * fViscosity * val ;
+            
+            
            
            // InvPermTensor.Print("InvK = ");
           //  PermTensor.Print("K = ");

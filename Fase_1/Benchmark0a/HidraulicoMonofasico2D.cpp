@@ -18,6 +18,8 @@
 #include "TPZVTKGeoMesh.h"
 #include "pzanalysis.h"
 #include "pzbndcond.h"
+#include "../TPZDarcy2DMaterialMem.h"
+#include "../TPZMonoPhasicMemoryDFN.h"
 
 #include "pzinterpolationspace.h"
 #include "pzintel.h"
@@ -153,6 +155,19 @@ void HidraulicoMonofasico2D::Run(int pOrder)
     TPZBuildMultiphysicsMesh::TransferFromMeshes(meshvector, cmesh_m);
     cmesh_m->LoadReferences();
     
+    long nel = cmesh_m->NElements();
+    TPZVec<long> indices;
+    for (long el = 0; el<nel; el++) {
+        TPZCompEl *cel = cmesh_m->Element(el);
+        TPZMultiphysicsElement *mfcel = dynamic_cast<TPZMultiphysicsElement *>(cel);
+        if (!mfcel)
+        {
+            continue;
+        }
+        mfcel->InitializeIntegrationRule();
+        mfcel->PrepareIntPtIndices();
+    }
+    
     {
         std::ofstream filecm("MalhaC_m.txt"); //Impressão da malha computacional multifísica (formato txt)
         cmesh_m->Print(filecm);
@@ -178,7 +193,7 @@ void HidraulicoMonofasico2D::Run(int pOrder)
     simulation_data->Set_epsilon_cor(0.001);
     simulation_data->Set_n_iterations(1);
     
-    std::string plotfile("Benchmark_0a_DarcyTest.vtk");
+    std::string plotfile("Benchmark_Mono_DarcyTest.vtk");
     TPZStack<std::string> scalnames, vecnames;
     scalnames.Push("P");
     vecnames.Push("V");
@@ -463,12 +478,16 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_m(TPZGeoMesh *gmesh, int pOrder)
     TPZCompMesh * cmesh = new TPZCompMesh(gmesh);
     cmesh->SetDefaultOrder(pOrder); //Insere ordem polimonial de aproximação
     cmesh->SetDimModel(fdim); //Insere dimensão do modelo
-    cmesh->SetAllCreateFunctionsMultiphysicElem();
-    
+    //cmesh->SetAllCreateFunctionsMultiphysicElem();
+    cmesh->SetAllCreateFunctionsMultiphysicElemWithMem();
+    cmesh->ApproxSpace().CreateWithMemory(true);
+
     
     // Criando material:
     //TPZPoroElasticMF2d *material = new TPZPoroElasticMF2d(matID,dim);
-    TPZDarcy2DMaterial *material = new TPZDarcy2DMaterial(fmatID,fdim,1,ftheta);//criando material que implementa a formulacao fraca do problema modelo
+    
+    TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN> *material = new TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN> (fmatID,fdim,1,1); // Darcy's material with mem
+    //TPZDarcy2DMaterial *material = new TPZDarcy2DMaterial(fmatID,fdim,1,ftheta); // Simple Darcy's material
     TPZFMatrix<REAL> K(fdim,fdim),invK(fdim,fdim);
     K.Zero();
     invK.Zero();
@@ -480,7 +499,8 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_m(TPZGeoMesh *gmesh, int pOrder)
     
     // material->SetPermeabilityTensor(K, invK);
     
-    TPZDarcy2DMaterial *materialFrac = new TPZDarcy2DMaterial(fmatFrac,fdimFrac,1,ftheta);//criando material que implementa a formulacao fraca do problema modelo
+    TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN> *materialFrac = new TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN> (fmatFrac,fdimFrac,1,1); // Darcy's material with mem
+    //TPZDarcy2DMaterial *materialFrac = new TPZDarcy2DMaterial(fmatFrac,fdimFrac,1,ftheta); // Simple Darcy's material
     REAL kf = 4.68789e-4;
     REAL Dyf = 6.5e-5;
     materialFrac->SetPermeability(kf*Dyf);
