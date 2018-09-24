@@ -563,6 +563,40 @@ void CreateRefPatterns(TPZGeoMesh *gmesh, TPZVec<int64_t> &elemententity, std::s
     gmesh->BuildConnectivity();
 }
 
+/// verify if all dim-1 elements have dim neighbours
+void VerifyEmbeddedElements(TPZGeoMesh *gmesh)
+{
+    int dim = gmesh->Dimension();
+    int64_t nelem = gmesh->NElements();
+    int wrongmatid = -200;
+    bool error = false;
+    for(int64_t el=0; el<nelem; el++)
+    {
+        TPZGeoEl *gel = gmesh->Element(el);
+        if(gel && gel->Dimension() < dim)
+        {
+            int numneigh = 0;
+            int nsides = gel->NSides();
+            TPZGeoElSide gelside(gel,nsides-1);
+            TPZGeoElSide neighbour(gelside.Neighbour());
+            while (neighbour != gelside) {
+                numneigh++;
+                neighbour = neighbour.Neighbour();
+            }
+            if (numneigh == 0) {
+                gel->SetMaterialId(wrongmatid);
+                error = true;
+            }
+        }
+    }
+    if(error)
+    {
+        std::ofstream out("gmesh_error.vtk");
+        TPZVTKGeoMesh::PrintGMeshVTK(gmesh, out);
+        DebugStop();
+    }
+}
+
 /// verify is each macro element links only two subdomains
 void VerifySubdomainConsistency(TPZGeoMesh *gmesh, TPZVec<int64_t> &elemententity, std::set<int> &matids)
 {
@@ -689,10 +723,25 @@ void AdjustEntityOfFractures(TPZGeoMesh *gmesh,TPZVec<int64_t> &EntityIndex, std
                 neighbour = neighbour.Neighbour();
             }
             if (entities.size() != 1) {
-                TPZManVector<REAL,3> co0(3),co1(3);
-                gel->Node(0).GetCoordinates(co0);
-                gel->Node(1).GetCoordinates(co1);
-                std::cout << "Coordinates of the element " << co0 << " " << co1 << std::endl;
+                std::cout << "gel with index " << el << " is embedded in " << entities.size() << " macro domains\n";
+                for(int side=0; side < gel->NSides(); side++)
+                {
+                    std::cout << "Neighbours for side " << side << std::endl;
+                    TPZGeoElSide neighbour, gelside(gel,side);
+                    neighbour = gelside.Neighbour();
+                    while(neighbour != gelside)
+                    {
+                        std::cout << "gel index " << neighbour.Element()->Index() << " dimension " << neighbour.Element()->Dimension() << std::endl;
+                        neighbour = neighbour.Neighbour();
+                    }
+                    
+                }
+                TPZManVector<REAL,3> co0(3);
+                for(int node=0; node<gel->NCornerNodes(); node++)
+                {
+                    gel->Node(node).GetCoordinates(co0);
+                    std::cout << "Coordinates of node " << node << " " << co0 << std::endl;
+                }
                 DebugStop();
             }
             EntityIndex[gel->Index()] = *entities.begin();
@@ -927,6 +976,7 @@ void TPZFracSimulation::AdjustGeometricMesh(const std::string &rootname)
     matids.insert(fMHM->fSkeletonMatId);
     CreateRefPatterns(gmesh, fGmsh.fEntityIndex, matids);
     VerifySubdomainConsistency(gmesh, fGmsh.fEntityIndex, matids);
+    VerifyEmbeddedElements(gmesh);
     matids = fMHM->fFractureFlowDim1MatId;
     AdjustEntityOfFractures(gmesh,fGmsh.fEntityIndex,matids);
     std::map<int64_t,std::pair<int64_t,int64_t>> skeletonstruct;
