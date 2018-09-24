@@ -14,13 +14,15 @@
 
 #include "pzgmesh.h"
 #include "TPZPointCloud.h"
-
+#include "VTKIntersect.h"
 
 int main(int argc, char *argv[]) {
 #ifdef LOG4CXX
     InitializePZLOG();
 #endif
-    
+    GenerateVTKInput();
+    VTKWindow();
+    exit(0);
     // Initializing uniform refinements for reference elements
     gRefDBase.InitializeUniformRefPattern(EOned);
     gRefDBase.InitializeUniformRefPattern(EQuadrilateral);
