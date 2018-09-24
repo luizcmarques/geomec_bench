@@ -47,7 +47,12 @@ if(USING_VTK)
 	include(${VTK_USE_FILE})
 	add_definitions(-DUSING_VTK)
 else()
+	unset(Qt5Core_DIR CACHE)
+	unset(Qt5Gui_DIR CACHE)
+	unset(Qt5Sql_DIR CACHE)
+	unset(Qt5Widgets_DIR CACHE)
 	unset(VTK_LIBRARIES)
+	unset(VTK_DIR CACHE)
 endif(USING_VTK)
 
 
